@@ -28,3 +28,4 @@ vignettes/*.pdf
 .Renviron
 .Rproj.user
 TapestriR.Rproj
+data/merged_92542.h5
