@@ -1,0 +1,429 @@
+---
+title: "Multi-omics Analysis"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r include=FALSE}
+
+library(rhdf5)
+
+library(ggplot2)
+library(ggthemes)
+library(plotly)
+require(tidyverse)
+require(patchwork)
+library(uwot)
+require(scran)
+
+#require(tapestri)
+
+
+# packages <- c('rhdf5', 'tidyverse')
+# 
+# for(i in 1:length(packages)) {
+#   package = packages[i]
+#   if (!requireNamespace(package, quietly = TRUE))
+#     install.packages(package)
+#   
+#   require(package=package, character.only=TRUE)
+# }
+
+
+source("R/filters.R")
+source("R/normalization.R")
+
+# source("src/R/h5_reads_reader.r")
+# source("src/R/h5_protein_reader.r")
+# source("src/R/h5_genotype_reader.r")
+# source("src/R/h5_vaf_reader.r")
+
+
+
+```
+
+### Load data
+
+to do:
+* meta data summary? 
+* filter options identical to insights
+* annotate variant and amplicons so I can easily select
+
+```{r load data, cache=TRUE}
+filename <- "data/ABseq021.h5"
+
+# ideally would just start by loading filtered H5, but for now will send filtering list to function to mimic
+
+tapestri_raw = h5_reader(filename,min_mutation_rate = 0.1)
+
+analysis_df = filter_variants(tapestri_raw)
+
+vaf=round(analysis_df$variant$features$AD/analysis_df$variant$features$DP, 3)
+vaf[is.na(vaf)] <- 0
+analysis_df = analysis_df %>% add_feature(assay_name  = 'variant', feature_name = 'VAF', new_data = vaf)
+
+protein_counts_norm = analysis_df$protein$features$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
+analysis_df = analysis_df %>% add_feature(assay_name  = 'protein', feature_name = 'normalized', new_data = protein_counts_norm)
+
+str(analysis_df, max.level=6, vec.len = 2)
+
+```
+
+### X-Y plots
+
+
+```{r fig.width = 12, fig.height = 8}
+
+
+##################
+# select the Proteins to plot on X and Y
+##################
+
+#protein_x = 'CD34'
+#protein_y = 'CD38'
+
+protein_x = 1
+protein_y = 2
+
+##################
+# select 1 or more features to color by
+# color_by should be a vector of column header you want to color by
+##################
+
+#all proteins
+color_by = analysis_df$protein$features$normalized
+
+#select a few proteins
+#color_by =  analysis_df$protein$features$normalized %>% select('CD110','CD117')
+
+#select a few variant
+#color_by =  analysis_df$variant$features$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+
+
+p  = scatterplot(analysis_df,
+                 x = analysis_df$protein$features$normalized[[protein_x]], 
+                 y= analysis_df$protein$features$normalized[[protein_y]], 
+                 color_by = color_by)
+p = p + xlab(protein_x) + ylab(protein_y)
+p = p + x_y_theme + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
+p
+
+#select a few variant
+color_by =  analysis_df$variant$features$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+
+
+p  = scatterplot(analysis_df,
+                 x = analysis_df$protein$features$normalized[[protein_x]], 
+                 y= analysis_df$protein$features$normalized[[protein_y]], 
+                 color_by = color_by)
+p = p + xlab(protein_x) + ylab(protein_y)
+p = p + x_y_theme 
+p
+
+
+```
+
+### Figure out how many clusters?
+
+To do: 
+
+* examples of how to choose k
+* what is in each cluster signature
+
+```{r}
+
+```
+
+
+### Cluster SNV
+
+clustering by kmeans and louvain on umap projection and raw features
+
+```{r cluster snv, cache=TRUE}
+
+##################
+# do demension reduction and clustering a few different ways
+##################
+
+#dimensional reduction using umap
+set.seed(111)
+umap_values <- umap(analysis_df$variant$features$VAF, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
+
+umap_layer = tibble(    
+      x = umap_values[,1],
+      y = umap_values[,2]
+)
+
+analysis_df = analysis_df %>% add_analysis(new_data = umap_layer, assay_name = 'variant',analysis_name = 'umap_vaf')
+  
+######
+# Hold all the different customer labels in a single structure
+#####
+cluster_by = analysis_df$variant$analysis$umap_vaf
+clusters = tibble(cell_id=analysis_df$cell_id)
+
+#### do the clustering
+
+for(i in 2:5) {
+  kmean_values <- kmeans(cluster_by, i ,iter.max=500)
+  clusters[[paste0('umap.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
+
+  kmean_values <- kmeans(cluster_by, i ,iter.max=500)
+  clusters[[paste0('feature.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
+
+}
+
+graph_values <- buildSNNGraph(t(cluster_by), k=150)
+louvain_clust <- igraph::cluster_louvain(graph_values)$membership
+
+clusters = clusters %>% mutate(
+  umap.louvain.cluster = as_factor(louvain_clust))
+
+graph_values <- buildSNNGraph(t(cluster_by), k=150)
+louvain_clust <- igraph::cluster_louvain(graph_values)$membership
+
+clusters = clusters %>% mutate(
+  features.louvain.cluster = as_factor(louvain_clust))
+
+#############
+## Add cluster labels to analysis data structure
+#############
+analysis_df = analysis_df %>% add_analysis(assay_name = 'variant', 
+                                           analysis_name =   'umap_vaf_clusters',
+                                           new_data = clusters[,-1])
+
+
+```
+
+#### plot UMAP and Clusters
+
+plot all the different clusters on the same umap projection
+
+```{r fig.width = 12, fig.height = 8}
+
+p  = scatterplot(analysis_df,
+                 x = analysis_df$variant$analysis$umap_vaf$x, 
+                 y= analysis_df$variant$analysis$umap_vaf$y, 
+                 color_by = analysis_df$variant$analysis$umap_vaf_clusters)
+p = p + projection_theme + ggtitle('umap_vaf_clusters')
+p
+
+```
+
+#### color UMAP by genotypes
+
+plotly so you can interactively show remove values 
+
+```{r fig.width = 12, fig.height = 12}
+ 
+ #%>% select(!contains('chr2:198267'))
+
+color_by = analysis_df$variant$features$NGT %>% select(1:2) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+
+
+p  = scatterplot(analysis_df,
+                 x = analysis_df$variant$analysis$umap_vaf$x, 
+                 y= analysis_df$variant$analysis$umap_vaf$y, 
+                 color_by = color_by)
+p = p + projection_theme 
+p = p + ggtitle('Color by Genotypes')
+ggplotly(p)
+
+
+```
+
+
+#### violin plots
+
+to do:
+
+* name the clusters based on signature
+* show heatmap of signature 
+
+```{r fig.width = 12, fig.height = 8}
+
+
+color_by = analysis_df$variant$analysis$umap_vaf_clusters$umap.kmean.cluster.2
+
+p  = scatterplot(analysis_df,
+                 x = analysis_df$variant$analysis$umap_vaf$x, 
+                 y= analysis_df$variant$analysis$umap_vaf$y, 
+                 color_by = color_by)
+p = p + projection_theme + ggtitle('umap_vaf_clusters') + theme(legend.position = 'none')
+
+
+v = violinplot(analysis_df,
+           clusters = color_by,
+           features = analysis_df$protein$features$normalized)
+p + v
+
+
+```
+
+
+#### Color UMAP by Proteins
+
+```{r fig.width = 12, fig.height = 8}
+
+p  = scatterplot(analysis_df,
+                 x = analysis_df$variant$analysis$umap_vaf$x, 
+                 y= analysis_df$variant$analysis$umap_vaf$y, 
+                 color_by = analysis_df$protein$features$normalized)
+p = p + projection_theme + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
+p = p + ggtitle('Color by Proteins')
+p
+
+```
+
+
+
+### Cluster by Proteins 
+
+clustering by kmeans and louvain on umap projection and raw features
+
+```{r cache=TRUE}
+
+##################
+# do demension reduction and clustering a few different ways
+##################
+
+#dimensional reduction using umap
+set.seed(111)
+umap_values <- umap(analysis_df$protein$features$normalized, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
+
+
+
+umap_layer = tibble(    
+      x = umap_values[,1],
+      y = umap_values[,2]
+)
+
+analysis_df = analysis_df %>% add_analysis(new_data = umap_layer, assay_name = 'protein',analysis_name = 'umap')
+  
+######
+# Hold all the different customer labels in a single structure
+#####
+clusters = tibble(cell_id=analysis_df$cell_id)
+
+#### do the clustering
+
+for(i in 2:5) {
+  kmean_values <- kmeans(analysis_df$protein$analysis$umap, i ,iter.max=500)
+  clusters[[paste0('umap.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
+
+  kmean_values <- kmeans(analysis_df$protein$analysis$umap, i ,iter.max=500)
+  clusters[[paste0('feature.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
+
+}
+
+graph_values <- buildSNNGraph(t(analysis_df$protein$analysis$umap), k=150)
+louvain_clust <- igraph::cluster_louvain(graph_values)$membership
+
+clusters = clusters %>% mutate(
+  umap.louvain.cluster = as_factor(louvain_clust))
+
+graph_values <- buildSNNGraph(t(analysis_df$protein$analysis$umap), k=150)
+louvain_clust <- igraph::cluster_louvain(graph_values)$membership
+
+clusters = clusters %>% mutate(
+  features.louvain.cluster = as_factor(louvain_clust))
+
+#############
+## Add cluster labels to analysis data structure
+#############
+analysis_df = analysis_df %>% add_analysis(assay_name = 'protein', 
+                                           analysis_name =   'clusters',
+                                           new_data = clusters[,-1])
+
+str(analysis_df, max.level=6, vec.len = 2)
+```
+
+#### plot UMAP and Clusters
+
+plot all the different clusters on the same umap projection
+
+```{r fig.width = 12, fig.height = 8}
+
+
+p  = scatterplot(analysis_df,
+                 x = analysis_df$protein$analysis$umap$x, 
+                 y= analysis_df$protein$analysis$umap$y, 
+                 color_by = analysis_df$protein$analysis$clusters)
+
+p = p + xlab('') + ylab('')
+p = p + projection_theme 
+p
+
+```
+
+
+#### violin plots
+
+to do:
+
+* name the clusters based on signature
+* show heatmap of signature 
+
+```{r fig.width = 12, fig.height = 8}
+
+p = violinplot(analysis_df,
+           clusters = analysis_df$protein$analysis$clusters$features.louvain.cluster,
+           features = analysis_df$protein$features$normalized)
+p
+
+```
+
+
+#### Color UMAP by features
+
+```{r fig.width = 12, fig.height = 8}
+
+p  = scatterplot(analysis_df,
+                 x = analysis_df$protein$analysis$umap$x, 
+                 y= analysis_df$protein$analysis$umap$y, 
+                 color_by = analysis_df$protein$features$normalized)
+p = p + projection_theme + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
+p
+
+```
+
+
+
+## To do 
+
+
+#### CNV
+
+
+```{r fig.width = 12, fig.height = 8, eval=FALSE}
+
+data_to_plot = tibble(
+  analysis_df$variant$analysis$clusters,
+  analysis_df$cnv$features$read_counts
+)
+
+df_long = data_to_plot %>% 
+  pivot_longer(-c(contains('cluster')), 
+               names_to = 'feature',values_to = 'value') %>% 
+  mutate(feature = as_factor(feature))
+
+# group by clusters
+p = ggplot(data=df_long 
+           #%>% filter(feature %in% colnames(analysis_df$amplicon$features)[30:60])
+     )
+p = p + geom_boxplot(aes(x=feature, y=value, fill=umap.kmean.cluster.2), outlier.shape = NA, notch = TRUE )
+#p = p + facet_wrap(~umap.kmean.cluster, ncol = 1)
+#p = p + geom_smooth(aes(x=as.numeric(feature), y=value, color=umap.kmean.cluster), method = 'loess',se=FALSE)
+p = p + xlab('') + ylab('')
+p = p + x_y_theme + theme(legend.position = "none",
+              axis.text.x = element_text(angle = 90, hjust = 1))
+p
+
+```
+
+
