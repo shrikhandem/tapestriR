@@ -11,18 +11,24 @@ editor_options:
 
 ```{r include=FALSE}
 
-library(rhdf5)
+# library(rhdf5)
+# require(tidyverse)
 
-library(ggplot2)
-library(ggthemes)
+library(TapestriR)
+#library(ggplot2)
+
 library(plotly)
-require(tidyverse)
 require(patchwork)
+
+# umap library
 library(uwot)
+
+# clustering
 require(scran)
 
-#require(tapestri)
 
+# source("R/filters.R")
+# source("R/normalization.R")
 
 # packages <- c('rhdf5', 'tidyverse')
 # 
@@ -35,13 +41,6 @@ require(scran)
 # }
 
 
-source("R/filters.R")
-source("R/normalization.R")
-
-# source("src/R/h5_reads_reader.r")
-# source("src/R/h5_protein_reader.r")
-# source("src/R/h5_genotype_reader.r")
-# source("src/R/h5_vaf_reader.r")
 
 
 
@@ -55,7 +54,7 @@ to do:
 * annotate variant and amplicons so I can easily select
 
 ```{r load data, cache=TRUE}
-filename <- "data/ABseq021.h5"
+filename <- "~/Google Drive/launches/r_package/TapestriR/data/ABseq021.h5"
 
 # ideally would just start by loading filtered H5, but for now will send filtering list to function to mimic
 
@@ -105,24 +104,22 @@ color_by = analysis_df$protein$features$normalized
 #color_by =  analysis_df$variant$features$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
 
 
-p  = scatterplot(analysis_df,
-                 x = analysis_df$protein$features$normalized[[protein_x]], 
+p  = tapestri_scatterplot(x = analysis_df$protein$features$normalized[[protein_x]], 
                  y= analysis_df$protein$features$normalized[[protein_y]], 
                  color_by = color_by)
 p = p + xlab(protein_x) + ylab(protein_y)
-p = p + x_y_theme + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
+p = p + theme_bw()  + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
 p
 
 #select a few variant
 color_by =  analysis_df$variant$features$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
 
 
-p  = scatterplot(analysis_df,
-                 x = analysis_df$protein$features$normalized[[protein_x]], 
+p  = tapestri_scatterplot(x = analysis_df$protein$features$normalized[[protein_x]], 
                  y= analysis_df$protein$features$normalized[[protein_y]], 
                  color_by = color_by)
 p = p + xlab(protein_x) + ylab(protein_y)
-p = p + x_y_theme 
+p = p + theme_bw()  
 p
 
 
@@ -206,11 +203,11 @@ plot all the different clusters on the same umap projection
 
 ```{r fig.width = 12, fig.height = 8}
 
-p  = scatterplot(analysis_df,
+p  = tapestri_scatterplot(
                  x = analysis_df$variant$analysis$umap_vaf$x, 
                  y= analysis_df$variant$analysis$umap_vaf$y, 
                  color_by = analysis_df$variant$analysis$umap_vaf_clusters)
-p = p + projection_theme + ggtitle('umap_vaf_clusters')
+p = p + umap_theme() + ggtitle('umap_vaf_clusters')
 p
 
 ```
@@ -226,11 +223,11 @@ plotly so you can interactively show remove values
 color_by = analysis_df$variant$features$NGT %>% select(1:2) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
 
 
-p  = scatterplot(analysis_df,
+p  = tapestri_scatterplot(
                  x = analysis_df$variant$analysis$umap_vaf$x, 
                  y= analysis_df$variant$analysis$umap_vaf$y, 
                  color_by = color_by)
-p = p + projection_theme 
+p = p + umap_theme() 
 p = p + ggtitle('Color by Genotypes')
 ggplotly(p)
 
@@ -250,16 +247,19 @@ to do:
 
 color_by = analysis_df$variant$analysis$umap_vaf_clusters$umap.kmean.cluster.2
 
-p  = scatterplot(analysis_df,
+p  = tapestri_scatterplot(
                  x = analysis_df$variant$analysis$umap_vaf$x, 
                  y= analysis_df$variant$analysis$umap_vaf$y, 
                  color_by = color_by)
-p = p + projection_theme + ggtitle('umap_vaf_clusters') + theme(legend.position = 'none')
+p = p + umap_theme() + ggtitle('umap_vaf_clusters') + theme(legend.position = 'none')
 
 
-v = violinplot(analysis_df,
-           clusters = color_by,
-           features = analysis_df$protein$features$normalized)
+v = tapestri_violinplot(clusters = color_by,
+               features = analysis_df$protein$features$normalized)
+v = v + theme_bw() + theme(legend.position = "none",
+                            axis.text.x = element_text(angle = 90, hjust = 1))
+  
+## pathwork magic
 p + v
 
 
@@ -270,11 +270,11 @@ p + v
 
 ```{r fig.width = 12, fig.height = 8}
 
-p  = scatterplot(analysis_df,
+p  = tapestri_scatterplot(
                  x = analysis_df$variant$analysis$umap_vaf$x, 
                  y= analysis_df$variant$analysis$umap_vaf$y, 
                  color_by = analysis_df$protein$features$normalized)
-p = p + projection_theme + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
+p = p + umap_theme() + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
 p = p + ggtitle('Color by Proteins')
 p
 
@@ -350,13 +350,13 @@ plot all the different clusters on the same umap projection
 ```{r fig.width = 12, fig.height = 8}
 
 
-p  = scatterplot(analysis_df,
+p  = tapestri_scatterplot(
                  x = analysis_df$protein$analysis$umap$x, 
                  y= analysis_df$protein$analysis$umap$y, 
                  color_by = analysis_df$protein$analysis$clusters)
 
 p = p + xlab('') + ylab('')
-p = p + projection_theme 
+p = p + umap_theme() 
 p
 
 ```
@@ -371,7 +371,7 @@ to do:
 
 ```{r fig.width = 12, fig.height = 8}
 
-p = violinplot(analysis_df,
+p = tapestri_violinplot(
            clusters = analysis_df$protein$analysis$clusters$features.louvain.cluster,
            features = analysis_df$protein$features$normalized)
 p
@@ -383,11 +383,11 @@ p
 
 ```{r fig.width = 12, fig.height = 8}
 
-p  = scatterplot(analysis_df,
+p  = tapestri_scatterplot(
                  x = analysis_df$protein$analysis$umap$x, 
                  y= analysis_df$protein$analysis$umap$y, 
                  color_by = analysis_df$protein$features$normalized)
-p = p + projection_theme + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
+p = p + umap_theme() + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
 p
 
 ```
@@ -420,9 +420,14 @@ p = p + geom_boxplot(aes(x=feature, y=value, fill=umap.kmean.cluster.2), outlier
 #p = p + facet_wrap(~umap.kmean.cluster, ncol = 1)
 #p = p + geom_smooth(aes(x=as.numeric(feature), y=value, color=umap.kmean.cluster), method = 'loess',se=FALSE)
 p = p + xlab('') + ylab('')
-p = p + x_y_theme + theme(legend.position = "none",
+p = p + theme_bw()  + theme(legend.position = "none",
               axis.text.x = element_text(angle = 90, hjust = 1))
 p
+
+```
+
+#### Heatmap
+```{r}
 
 ```
 

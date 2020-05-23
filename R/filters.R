@@ -1,12 +1,14 @@
-# Read Tapestri multi-omics h5 file
-#
-# @param filename h5 file
-# @param min_mutation_rate only read variants with mutations rate higher then treshold. Primarly done to reduce size of data in memory
-# @return Tapestri multi-omics object
-# @examples
-# \dontrun{
 
-# }
+#' Read Tapestri multi-omics h5 file
+#'
+#' @param filename h5 file
+#' @param min_mutation_rate only read variants with mutations rate higher then treshold. Primarly done to reduce size of data in memory
+#' @return Tapestri multi-omics object
+#' @export
+#' @examples
+#' \dontrun{
+#' tapestri_raw = h5_reader(filename,min_mutation_rate = 0.1)
+#' }
 h5_reader <- function(filename, min_mutation_rate = 0.01) {
   
   # filename <- "~/Google Drive/launches/r_package/insights_v3/data/ABseq021.h5"
@@ -15,7 +17,7 @@ h5_reader <- function(filename, min_mutation_rate = 0.01) {
   # layer = 'NGT'
   # min_mutation_rate = 0.1
   
-  h5f = H5Fopen(filename)
+  h5f = rhdf5::H5Fopen(filename)
   
   # filter data to make it managable in R
   ngt = h5f$assays$dna$layers$NGT
@@ -70,13 +72,23 @@ h5_reader <- function(filename, min_mutation_rate = 0.01) {
   # str(tapestri_object, max.level=3, vec.len = 2)
   
   # tapestri_object = as_tibble(tapestri_object)
-  H5Fclose(h5f)
+  rhdf5::H5Fclose(h5f)
   devnull <- base::gc()
   return(tapestri_object)     
 }
 
-### to day check that feature columns are the same
-add_feature <- function(tapestri_object, new_data, assay_name, feature_name) {
+
+#' Add features to tapestri object
+#'
+#' @param tapestri_object tapestri object to update
+#' @param assay_name feature belongs to assay variants, cnv, proteins 
+#' @param feature_name name of feature
+#' @param new_data new date to add to taesptri object
+#'
+#' @return updated tapestri object
+#' @export
+#'
+add_feature <- function(tapestri_object, assay_name, feature_name, new_data) {
   
   # tapestri_object = analysis_df
   # new_data = protein_counts_norm
@@ -101,7 +113,17 @@ add_feature <- function(tapestri_object, new_data, assay_name, feature_name) {
 }
 
 
-add_analysis <- function(tapestri_object, new_data, assay_name, analysis_name) {
+#' Add analysis to tapestri object. the analysis should have same # of cells as tapestri object
+#'
+#' @param tapestri_object tapestri object to update
+#' @param assay_name feature belongs to assay variants, cnv, proteins 
+#' @param analysis_name 
+#' @param new_data 
+#'
+#' @return
+#' @export
+#'
+add_analysis <- function(tapestri_object, assay_name, analysis_name, new_data) {
   
   # tapestri_object = analysis_df
   # assay_name = 'variants' 
@@ -133,22 +155,18 @@ add_analysis <- function(tapestri_object, new_data, assay_name, analysis_name) {
 
 
 
-# Filter raw genotypes based on quality
-#
-# @param loom Loom file
-# @param gqc Genotype quality cutoff (default 30)
-# @param dpc Read depth cutoff (default 10)
-# @param afc Allele frequency cutoff (default 20)
-# @param mv Remove variants with < mv of known values (default 50)
-# @param mc Remove variants with < mc of known values (default 50)
-# @param mm Remove variants mutated in < mm of cells (default 1)
-# @param gt.mask mask low quality GT as missing (if GQ/DP/AF lower than cutoff, default FALSE)
-# @return Filtered genotypes
-# @examples
-# \dontrun{
-# f <- tapestri.cnv.loh.genotypes.filter(loom)
-# f <- tapestri.cnv.loh.genotypes.filter(loom, 30, 10, 20, 50, 50, 1)
-# }
+#' Filter raw genotypes based on quality
+#'
+#' @param loom Loom file
+#' @param gqc Genotype quality cutoff (default 30)
+#' @param dpc Read depth cutoff (default 10)
+#' @param afc Allele frequency cutoff (default 20)
+#' @param mv Remove variants with < mv of known values (default 50)
+#' @param mc Remove variants with < mc of known values (default 50)
+#' @param mm Remove variants mutated in < mm of cells (default 1)
+#' @param gt.mask mask low quality GT as missing (if GQ/DP/AF lower than cutoff, default FALSE)
+#' @return Filtered genotypes
+#' @export
 filter_variants <- function(tapestri_object, gqc = 30, dpc = 10, afc = 20, mv = 50, mc = 50, mm = 1, gt.mask = FALSE) {
   
   tapestri_object = tapestri_raw
