@@ -3,20 +3,21 @@
 
 # Installation
 
-Install `devtools` first and then install the other packages. `devtools` will attempt to automatically install prerequisites for these packages.
-NOTE: Install each package independently, as install script may prompt to update previously downloaded packages.
+Install `devtools` first and then install `TaprestriR`. 
 
+```r
 install.packages(c("devtools"), repos='http://cran.us.r-project.org')
+devtools::install_github("anupparikh/tapestri_multiomics")
 
+```
 
 # Usage
 
 Start with example_analysis.Rmd in the vignettes directory. 
 
 
-
 # Getting help
 If you have any questions or need more information about this R package or the methods it implements, please contact Mission Bio at support@missionbio.com
-
+You can also post questions to the github repository. 
 # License
 AGPL-3

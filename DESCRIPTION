@@ -11,11 +11,11 @@ Description: Detect and Compare cell clones from DNA/Protein analytes, analyse c
 License: AGPL-3
 URL: https://missionbio.com/
 Depends: 
-  R (>= 3.6.0),
+  R (>= 3.6.0)
+Imports: 
   rhdf5, 
   tidyverse,
-  ggplot2
-Imports: 
+  ggplot2,
   patchwork,
   ggthemes, 
   plotly

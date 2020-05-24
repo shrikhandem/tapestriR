@@ -11,11 +11,7 @@ editor_options:
 
 ```{r include=FALSE}
 
-# library(rhdf5)
-# require(tidyverse)
-
 library(TapestriR)
-#library(ggplot2)
 
 library(plotly)
 require(patchwork)
@@ -25,23 +21,6 @@ library(uwot)
 
 # clustering
 require(scran)
-
-
-# source("R/filters.R")
-# source("R/normalization.R")
-
-# packages <- c('rhdf5', 'tidyverse')
-# 
-# for(i in 1:length(packages)) {
-#   package = packages[i]
-#   if (!requireNamespace(package, quietly = TRUE))
-#     install.packages(package)
-#   
-#   require(package=package, character.only=TRUE)
-# }
-
-
-
 
 
 ```
