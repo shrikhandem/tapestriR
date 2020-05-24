@@ -70,6 +70,8 @@ log_norm_by_feature <- function(counts, ...) {
 #' @param counts counts data
 #' @return normalized counts
 #' @export
+#' @importFrom  SciViews ln
+#' @importFrom  EnvStats geoMean
 #' @examples
 #' \dontrun{
 #' counts.norm <- clr_by_feature(counts)
@@ -86,6 +88,8 @@ clr_by_cell <- function(counts, ...) {
 #' @param counts counts data
 #' @return normalized counts
 #' @export
+#' @importFrom  SciViews ln
+#' @importFrom  EnvStats geoMean
 #' @examples
 #' \dontrun{
 #' counts.norm <- clr_by_feature(counts)

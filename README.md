@@ -6,7 +6,14 @@
 Install `devtools` first and then install `TaprestriR`. 
 
 ```r
-install.packages(c("devtools"), repos='http://cran.us.r-project.org')
+if (!requireNamespace("devtools", quietly = TRUE))
+  install.packages(c("devtools"), repos='http://cran.us.r-project.org')
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("rhdf5")
+
 devtools::install_github("anupparikh/tapestri_multiomics")
 
 ```

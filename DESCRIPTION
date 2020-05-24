@@ -18,7 +18,9 @@ Imports:
   ggplot2,
   patchwork,
   ggthemes, 
-  plotly
+  plotly,
+  SciViews,
+  EnvStats
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 Encoding: UTF-8

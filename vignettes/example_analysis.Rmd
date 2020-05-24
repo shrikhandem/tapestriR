@@ -12,12 +12,19 @@ editor_options:
 ```{r include=FALSE}
 
 library(TapestriR)
+library(tidyverse)
+library(ggplot2)
+
+library(TapestriR)
 
 library(plotly)
 require(patchwork)
 
 # umap library
 library(uwot)
+
+#normalization 
+library(SciViews)
 
 # clustering
 require(scran)
