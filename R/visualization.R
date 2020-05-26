@@ -104,7 +104,7 @@ tapestri_violinplot <- function(clusters , features) {
 #' Recode NGT values HET, HOM, WT or MUT/WT if zygosity is ignored
 #'
 #' @param x NGT vector
-#' @param collapse_zygosity 
+#' @param collapse_zygosity default TRUE (WT,MUT). if FALSE (WT, HET, HOM)
 #'
 #' @return
 #' @export

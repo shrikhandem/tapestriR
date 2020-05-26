@@ -1,4 +1,6 @@
 
+setOldClass(c("tbl_df", "tbl", "data.frame"))
+
 #' Assay class
 #'
 #' Store assay specific details for given sample
@@ -11,10 +13,8 @@
 #'
 #' @name Assay-class
 #' @rdname Assay-class
-#' @importClassesFrom tidyverse
+#' @import dplyr
 #' @exportClass Assay
-#'
-
 Assay <- setClass(
   Class = "Assay",
   slots = c(
@@ -23,10 +23,10 @@ Assay <- setClass(
     cell_annotations = "tbl_df",
     data_layers = "list",
     analysis_layers = "list"
-  ),
-  contains = c(class(tibble()))
+  )
+  #,contains = c(class(tibble()))
 )
-
+setClassUnion(name="AssayorNULL", c("Assay", "NULL"))
 
 #' @export
 #' @method dim Assay
@@ -58,7 +58,6 @@ nrow.Assay <- function(x) {
 }
 
 
-
 #' @export
 #' @method [[ Assay
 #'
@@ -75,25 +74,26 @@ setMethod(
   f = 'show',
   signature = 'Assay',
   definition = function(object) {
-    cat(sprintf('Assay: %s\n',object$assay_name))
+    cat(sprintf('Assay: %s\n',object@assay_name))
     cat(sprintf('Data:\n'))
-    cat(str(object$data_layers,max.level = 2))
+    cat(str(object@data_layers,max.level = 2))
     cat(sprintf('Analysis:\n'))
-    cat(str(object$analysis_layers,max.level = 2))
+    cat(str(object@analysis_layers,max.level = 2))
     
   }
 )
 
 
 
-
-
 #' Create Assay Object
 #'
-#' @param data data
-#' @param type assay type
-#' @param name sample name
-#' @return Analyte Analyte object
+#' @param cell_annotations 
+#' @param feature_annotations 
+#' @param assay_name assay name (dna, cnv, protein)
+#' @param cell_annotations table of data annotating cells, including sample labels
+#' @param feature_annotations table of data annotating features. i.e. variant names or amplicon name
+#'
+#' @return Assay object
 #' @importFrom methods new
 #' @export
 #' @examples
@@ -107,23 +107,21 @@ create_assay<- function(assay_name, cell_annotations, feature_annotations) {
   assay <- methods::new(Class = 'Assay',
                         assay_name = assay_name,
                         cell_annotations = cell_annotations,
-                        feature_annotations = feature_annotations,
-                        row.names = cell_annotations$barcode
+                        feature_annotations = feature_annotations
   )
   return(assay)
 }
 
 
-#' Title
+#' Add additional layers of data to Assay Object
 #'
-#' @param assay 
-#' @param layer_name 
-#' @param data 
+#' @param assay Assay object to add data to
+#' @param layer_name name of layer
+#' @param data new data to add
 #'
-#' @return
+#' @return Assay Object
 #' @export
 #'
-#' @examples
 add_data_layer<- function(assay, layer_name, data) {
   
   current_feature_names = as.character(assay@feature_annotations$id)
@@ -136,30 +134,31 @@ add_data_layer<- function(assay, layer_name, data) {
   if(!all.equal(dim(data), dim(assay))){
     stop(paste0('Annotations not the same length as features.'))
   }
-  
-  rownames(data) <- assay@cell_annotations$barcode
+  suppressWarnings(rownames(data) <- assay@cell_annotations$barcode)
   assay@data_layers[[layer_name]] = as_tibble(data, rownames=NA)
   
   return(assay)
 }
 
 
-#' Title
+#' Add additional layers of analysis to Assay Object. The function will check the new data has same number of cells
 #'
-#' @param assay 
-#' @param layer_name 
-#' @param data 
+#' @param assay Assay object to add data to
+#' @param layer_name name of layer
+#' @param data new data to add
 #'
-#' @return
+#' @return Assay Object
 #' @export
 #'
-#' @examples
 add_analysis_layer<- function(assay, layer_name, data) {
+  
+  data = as_tibble(data)
   
   if(nrow(assay) != nrow(data)){
     stop(paste0("analysis layer must have same number or rows (cells) as assay."))
   }
-  rownames(data) <- assay@cell_annotations$barcode
+  
+  suppressWarnings(rownames(data) <- assay@cell_annotations$barcode)
   assay@analysis_layers[[layer_name]] = as_tibble(data, rownames=NA)
   
   return(assay)

@@ -6,26 +6,35 @@ output:
     toc: true
 editor_options: 
   chunk_output_type: console
+vignette: >
+  %\VignetteIndexEntry{DNA Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 
 ```{r include=FALSE}
 
 library(TapestriR)
-require(rhdf5)
+library(rhdf5)
 library(tidyverse)
 library(ggplot2)
 library(plotly)
-require(patchwork)
+library(patchwork)
 
 # umap library
 library(uwot)
 
-#normalization 
+# protein normalization library
 library(SciViews)
 
-# clustering
-require(scran)
+# louvain clustering
+library(scran)
+
+ASSAY_NAME_VARIANT = 'dna'
+ASSAY_NAME_READ_COUNT = 'cnv'
+ASSAY_NAME_PROTEIN = 'protein'
+
 
 
 ```
@@ -39,11 +48,11 @@ to do:
 
 ```{r load data, cache=TRUE}
 
-filename <- "~/Google Drive/launches/r_package/TapestriR/data/PE11.cells.loom"
+filename <- system.file("extdata", "BL2779506.cells.loom", package = "TapestriR")
 
 variants = read_loom(filename,min_mutation_rate = 0.1)
 
-filtered_variants = filter_variants2(variants)
+filtered_variants = filter_variants(variants)
 vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
 vaf[is.na(vaf)] <- 0
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
@@ -54,7 +63,7 @@ filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
 clustering by kmeans and louvain on umap projection and raw features
 
-```{r cluster snv, cache=TRUE}
+```{r cluster_snv}
 
 ##################
 # do demension reduction and clustering a few different ways
@@ -75,7 +84,7 @@ filtered_variants = add_analysis_layer(assay = filtered_variants, layer_name = '
 # Hold all the different customer labels in a single structure
 #####
 cluster_by = filtered_variants@analysis_layers$umap_vaf
-clusters = tibble(cell_id=filtered_variants@cell_annotations$cell_id)
+clusters = list()
 
 #### do the clustering
 
@@ -91,21 +100,21 @@ for(i in 2:5) {
 graph_values <- buildSNNGraph(t(cluster_by), k=150)
 louvain_clust <- igraph::cluster_louvain(graph_values)$membership
 
-clusters = clusters %>% mutate(
-  umap.louvain.cluster = as_factor(louvain_clust))
+clusters[['umap.louvain.cluster']] = as_factor(louvain_clust)
 
 graph_values <- buildSNNGraph(t(cluster_by), k=150)
 louvain_clust <- igraph::cluster_louvain(graph_values)$membership
 
-clusters = clusters %>% mutate(
-  features.louvain.cluster = as_factor(louvain_clust))
+clusters[['features.louvain.cluster']] = as_factor(louvain_clust)
+
+
 
 #############
 ## Add cluster labels to analysis data structure
 #############
-filtered_variants = filtered_variants %>% add_analysis_layer(
-                                           layer_name =   'umap_vaf_clusters',
-                                           data = clusters[,-1])
+filtered_variants = add_analysis_layer( assay = filtered_variants,
+                                           layer_name  = 'umap_vaf_clusters',
+                                           data = as_tibble(clusters))
 
 
 ```

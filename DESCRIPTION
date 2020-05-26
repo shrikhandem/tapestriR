@@ -15,12 +15,14 @@ Depends:
 Imports: 
   rhdf5, 
   tidyverse,
+  dplyr,
   ggplot2,
   patchwork,
   ggthemes, 
   plotly,
   SciViews,
-  EnvStats
+  EnvStats,
+  methods
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 Encoding: UTF-8

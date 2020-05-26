@@ -1,5 +1,15 @@
 
 # divide by the columns
+#' Title
+#'
+#' @param df 
+#' @param z 
+#' @param na.rm 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 div_col <- function(df, z, na.rm = FALSE) {
   df <- as.matrix(df)
   divnorm <- c()
@@ -14,6 +24,7 @@ div_col <- function(df, z, na.rm = FALSE) {
 #' Log normalization factor per feature
 #'
 #' @param x Sample name
+#'
 #' @return normalization factor
 #' @export
 #' @examples
@@ -28,7 +39,9 @@ log_colMeans <- function(x){
 
 #' Log normalization by cell
 #'
+#' @param ... 
 #' @param counts counts data
+#'
 #' @return normalized counts
 #' @export
 #' @examples
@@ -44,7 +57,9 @@ log_norm_by_cell <- function(counts, ...) {
 
 #' Log normalization by feature
 #'
+#' @param ... 
 #' @param counts counts data
+#'
 #' @return normalized counts
 #' @export
 #' @examples
@@ -67,7 +82,9 @@ log_norm_by_feature <- function(counts, ...) {
 
 #' CLR normalization by cell
 #'
+#' @param ... 
 #' @param counts counts data
+#'
 #' @return normalized counts
 #' @export
 #' @importFrom  SciViews ln
@@ -85,7 +102,9 @@ clr_by_cell <- function(counts, ...) {
 
 #' CLR normalization by feature
 #'
+#' @param ... 
 #' @param counts counts data
+#'
 #' @return normalized counts
 #' @export
 #' @importFrom  SciViews ln
@@ -112,6 +131,7 @@ clr_by_feature <- function(counts, ...) {
 #' @param analyte Analyte object to be normalized (Supported analytes : prot/dna)
 #' @param group_by normalization to be performed across rows or columns (Supported : cell/feature)
 #' @param method Normalization method (Supported : mean/median/clr/sum)
+#'
 #' @return Analyte Analyte object with normalized data
 #' @export
 #' @examples

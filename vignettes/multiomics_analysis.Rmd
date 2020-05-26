@@ -6,26 +6,35 @@ output:
     toc: true
 editor_options: 
   chunk_output_type: console
+  
+vignette: >
+  %\VignetteIndexEntry{Multi-omics Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 
 ```{r include=FALSE}
 
 library(TapestriR)
-require(rhdf5)
+library(rhdf5)
 library(tidyverse)
 library(ggplot2)
 library(plotly)
-require(patchwork)
+library(patchwork)
 
 # umap library
 library(uwot)
 
-#normalization 
+# protein normalization library
 library(SciViews)
 
-# clustering
-require(scran)
+# louvain clustering
+library(scran)
+
+ASSAY_NAME_VARIANT = 'dna'
+ASSAY_NAME_READ_COUNT = 'cnv'
+ASSAY_NAME_PROTEIN = 'protein'
 
 
 ```
@@ -37,25 +46,24 @@ to do:
 * filter options identical to insights
 * annotate variant and amplicons so I can easily select
 
-```{r load data, cache=TRUE}
-#filename <- "~/Google Drive/launches/r_package/TapestriR/data/ABseq021.h5"
-filename <- "data/ABseq021.h5"
+```{r load_data}
+
+filename <- system.file("extdata", "ABseq021.h5", package = "TapestriR")
 
 # ideally would just start by loading filtered H5, but for now will send filtering list to function to mimic
+variants = read_h5(filename = filename, assay_name = ASSAY_NAME_VARIANT, min_mutation_rate = 0.01)
 
-variants = h5_reader(filename = filename,assay_name = ASSAY_NAME_VARIANT, min_mutation_rate = 0.01)
-
-filtered_variants = filter_variants2(variants)
+filtered_variants = filter_variants(variants)
 
 vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
 vaf[is.na(vaf)] <- 0
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
-protein = h5_reader(filename,assay_name = ASSAY_NAME_PROTEIN)
+protein = read_h5(filename,assay_name = ASSAY_NAME_PROTEIN)
 protein_counts_norm = protein@data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
 protein = add_data_layer(protein,'normalized',protein_counts_norm)
 
-cnv = h5_reader(filename,assay_name = ASSAY_NAME_READ_COUNT)
+cnv = read_h5(filename,assay_name = ASSAY_NAME_READ_COUNT)
 
 ab21 = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
 ab21 = add_assay(ab21,filtered_variants)
@@ -249,7 +257,7 @@ v = v + theme_bw() + theme(legend.position = "none",
                             axis.text.x = element_text(angle = 90, hjust = 1))
   
 ## pathwork magic
-p + v
+p / v
 
 
 ```
@@ -359,14 +367,14 @@ to do:
 p_umap  = tapestri_scatterplot(
                  x = experiment@protein@analysis_layers$umap$x, 
                  y= experiment@protein@analysis_layers$umap$y, 
-                 color_by = experiment@protein@analysis_layers$clusters) + 
+                 color_by = experiment@protein@analysis_layers$clusters$features.louvain.cluster) + 
   xlab('') + ylab('') + umap_theme() 
 
 p_violin = tapestri_violinplot(
            clusters = experiment@protein@analysis_layers$clusters$features.louvain.cluster,
            features = experiment@protein@data_layers$normalized)
 
-p_umap + p_violin
+p_umap / p_violin
 
 ```
 

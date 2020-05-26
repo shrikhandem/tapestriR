@@ -5,7 +5,7 @@
 \title{Filter raw genotypes based on quality}
 \usage{
 filter_variants(
-  tapestri_object,
+  variant_assay,
   gqc = 30,
   dpc = 10,
   afc = 20,
@@ -16,6 +16,8 @@ filter_variants(
 )
 }
 \arguments{
+\item{variant_assay}{Assay object of type dna}
+
 \item{gqc}{Genotype quality cutoff (default 30)}
 
 \item{dpc}{Read depth cutoff (default 10)}
@@ -29,8 +31,6 @@ filter_variants(
 \item{mm}{Remove variants mutated in < mm of cells (default 1)}
 
 \item{gt.mask}{mask low quality GT as missing (if GQ/DP/AF lower than cutoff, default FALSE)}
-
-\item{loom}{Loom file}
 }
 \value{
 Filtered genotypes

@@ -1,14 +1,18 @@
 
+ASSAY_NAME_VARIANT = 'dna'
+ASSAY_NAME_READ_COUNT = 'cnv'
+ASSAY_NAME_PROTEIN = 'protein'
+
+
 #' The Multiomics Class
 #'
 #' Store multiomics-multisample data generated from various Tapestri pipelines
-#' @slot name Analysis name
-#' @slot summary Sample or Assay summary
-#' @slot version Package version or Tapestri pipeline version or Loom file version
-#' @slot rna RNA assay
-#' @slot snv SNV assay
+#'
+#' @slot experiment_name Experiment Name
 #' @slot dna DNA assay
-#' @slot prot Protein assay
+#' @slot cnv read counts
+#' @slot protein Protein assay
+#' @slot cell_annotations cell annotations including sample labels
 #'
 #' @name Multiomics-class
 #' @rdname Multiomics-class
@@ -22,8 +26,8 @@ Multiomics <- setClass(
     cnv = "Assay",
     protein = "Assay",
     cell_annotations = "tbl_df" 
-  ),
-  contains = c()
+  )
+  #,contains = c()
 )
 
 
@@ -105,12 +109,19 @@ create_moo<- function(experiment_name, cell_annotations) {
 }
 
 
+#' Add Assay Object to Multiomics object (moo)
+#'
+#' @param moo Multiomics object 
+#' @param assay new Assay object to add
+#' @param keep_common_cells default FALSE. Will throw error if number of cells and cell barcodes dont match. If TRUE merge assays and only keep intersect of cells from all assays. 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 add_assay <- function(moo, assay, keep_common_cells=FALSE) {
   
-  # moo = ab21
-  # assay = cnv
-  # 
-  
+
   #check if the cells in the new assay matches current assay cells
   if(length(moo@cell_annotations$barcode) != length(assay@cell_annotations$barcode) ||
     all.equal(moo@cell_annotations$barcode, assay@cell_annotations$barcode) != TRUE) {
@@ -126,7 +137,7 @@ add_assay <- function(moo, assay, keep_common_cells=FALSE) {
         assay@analysis_layers[[layer]] = assay@analysis_layers[[layer]][common_barcodes$barcode,]
       }
       
-      rownames(assay@cell_annotations) <- assay@cell_annotations$barcode
+      suppressWarnings(rownames(assay@cell_annotations) <- assay@cell_annotations$barcode)
       assay@cell_annotations = assay@cell_annotations[common_barcodes$barcode,]
       
       slot(moo,assay@assay_name) = assay

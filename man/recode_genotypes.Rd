@@ -9,7 +9,7 @@ recode_genotypes(x, collapse_zygosity = TRUE)
 \arguments{
 \item{x}{NGT vector}
 
-\item{collapse_zygosity}{}
+\item{collapse_zygosity}{default TRUE (WT,MUT). if FALSE (WT, HET, HOM)}
 }
 \value{
 

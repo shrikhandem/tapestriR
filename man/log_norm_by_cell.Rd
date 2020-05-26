@@ -8,6 +8,8 @@ log_norm_by_cell(counts, ...)
 }
 \arguments{
 \item{counts}{counts data}
+
+\item{...}{}
 }
 \value{
 normalized counts
