@@ -3,24 +3,24 @@
 
 # Installation
 
-Install `devtools` first and then install `TaprestriR`. 
+1) Install `devtools` and `BiocManager`.
+2) Install `TaprestriR`. 
+3) Start with example_analysis.Rmd in the vignettes directory. 
+
 
 ```r
-if (!requireNamespace("devtools", quietly = TRUE))
-  install.packages(c("devtools"), repos='http://cran.us.r-project.org')
-
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
+install.packages(c("devtools","BiocManager"), repos='http://cran.us.r-project.org')
 
 BiocManager::install("rhdf5")
 
 devtools::install_github("anupparikh/tapestri_multiomics")
 
+require(TapestriR)
 ```
 
 # Usage
 
-Start with example_analysis.Rmd in the vignettes directory. 
+
 
 
 # Getting help

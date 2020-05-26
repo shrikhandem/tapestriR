@@ -1,80 +1,79 @@
 
-#' Read Tapestri multi-omics h5 file
+
+
+#' Read loom file created by Tapestri pipeline
 #'
-#' @param filename h5 file
+#' @param filename loom file name
 #' @param min_mutation_rate only read variants with mutations rate higher then treshold. Primarly done to reduce size of data in memory
-#' @return Tapestri multi-omics object
+#' @return Tapestri object
 #' @export
 #' @examples
 #' \dontrun{
-#' tapestri_raw = h5_reader(filename,min_mutation_rate = 0.1)
+#' tapestri_raw = loom_reader(filename,min_mutation_rate = 0.1)
 #' }
-h5_reader <- function(filename, min_mutation_rate = 0.01) {
+loom_reader <- function(filename, min_mutation_rate=0.05) {
   
-  # filename <- "~/Google Drive/launches/r_package/insights_v3/data/ABseq021.h5"
-  # assay_name='dna'
-  # feature_filter = colnames(genotypes.zyg)
-  # layer = 'NGT'
+  # filename <- "data/PE11.cells.loom"
   # min_mutation_rate = 0.1
   
   h5f = rhdf5::H5Fopen(filename)
   
-  # filter data to make it managable in R
-  ngt = h5f$assays$dna$layers$NGT
-  mutation_rate = apply(ngt,1, FUN = function(x) {
+  features=as_tibble(h5f$row_attrs)
+  cells = h5f$col_attrs
+ 
+  layers = h5f$layers
+  ngt = h5f$matrix
+  layers$NGT = ngt
+  
+  
+  
+  mutation_rate = apply(ngt,2, FUN = function(x) {
     sum(x %in% c(1,2)) / ncol(ngt)
   })
   mutated_variants = mutation_rate > min_mutation_rate
+  filtered_features = features[mutated_variants,]
+  assay_name = 'variant'
   
-  barcodes <- unlist(h5f$assays$dna$ra)
-  
-  tapestri_object = tibble(cell_id = barcodes)
-  
-  ###### special load of DNA to reduce size
-  assay = h5f$assays[['dna']]
-  
-  col_names <- unlist(assay$ca$id)[mutated_variants]
-  
-  
-  layers = tibble(cell_id = barcodes)
-  for(layer in names(assay$layers)) {
-    
-    data = t(assay$layers[[layer]][mutated_variants, ])
-    colnames(data) <- col_names
-    layers[[layer]] = as_tibble(data)
+  tapestri_object = list()
+  for(layer in names(layers)) {
+    data = layers[[layer]][,mutated_variants]
+    colnames(data) <- filtered_features$id
+    tapestri_object = add_feature(tapestri_object = tapestri_object, assay_name = assay_name, feature_name = layer, new_data = data)
   }
-  
-  tapestri_object[['variant']] = tibble(features = layers[,-1])
-  
-  
-  ###### load rest of assays
-  assay_names <- c("cnv", "protein")
-  
-  for(assay_name in assay_names) {
+  tapestri_object = add_feature_annotations( tapestri_object = tapestri_object, assay_name = assay_name, annotations = filtered_features)
     
-    assay = h5f$assays[[assay_name]]
-    
-    col_names <- unlist(assay$ca$id)
-    barcodes <- unlist(assay$ra)
-    
-    layers = tibble(cell_id = barcodes)
-    for(layer in names(assay$layers)) {
-      
-      data = t(assay$layers[[layer]])
-      colnames(data) <- col_names
-      layers[[layer]] = as_tibble(data)
-    }
-    tapestri_object[[assay_name]] = tibble(features = layers[,-1])
-  }
-  
-  # map_dfc(tapestri_object, unlist)
-  str(tapestri_object, max.level=6, vec.len = 2)
-  # str(tapestri_object, max.level=3, vec.len = 2)
-  
-  # tapestri_object = as_tibble(tapestri_object)
   rhdf5::H5Fclose(h5f)
-  devnull <- base::gc()
-  return(tapestri_object)     
+  return(tapestri_object)
+}
+
+#' Add annotations to a Tapestri object. 
+#'
+#' @param tapestri_object 
+#' @param assay_name feature belongs to assay variants, cnv, proteins 
+#' @param annotations data.frame of annotations. should be same length as features in the assay. 
+#'
+#' @return tapestri object
+#' @export
+#'
+#' @examples
+add_feature_annotations <- function(tapestri_object, assay_name, annotations){
+
+  if(ncol(tapestri_object[[assay_name]][['features']][[1]]) != nrow(annotations)){
+    stop(paste0('Annotations not the same length as features.'))
+  }
+  
+  if(!is.null(tapestri_object[[assay_name]][['annotations']])){
+    to_add = tibble(
+      tapestri_object[[assay_name]][['annotations']],
+      annotations,
+    .name_repair ='unique')
+  } else {
+    to_add = annotations
+  }
+  
+  tapestri_object[[assay_name]][['annotations']] = annotations
+  
+  return(tapestri_object)
 }
 
 
@@ -85,7 +84,7 @@ h5_reader <- function(filename, min_mutation_rate = 0.01) {
 #' @param feature_name name of feature
 #' @param new_data new date to add to taesptri object
 #'
-#' @return updated tapestri object
+#' @return tapestri object
 #' @export
 #'
 add_feature <- function(tapestri_object, assay_name, feature_name, new_data) {
@@ -96,19 +95,22 @@ add_feature <- function(tapestri_object, assay_name, feature_name, new_data) {
   # feature_name='normalized'
   # 
   
+  # if (!assay_name %in% names(tapestri_object)) {
+  #   stop(paste0("Assay ", assay_name, ' does not exist.'))
+  # }
+
   if (!assay_name %in% names(tapestri_object)) {
-    stop(paste0("Assay ", assay_name, ' does not exist.'))
+    tapestri_object[[assay_name]][['features']][[feature_name]] = as_tibble(new_data) 
+  } else {
+    current_feature_names = as.character(colnames(tapestri_object[[assay_name]][['features']][[1]]))
+    new_feature_names = as.character(colnames(new_data))
+    
+    if (!all.equal(current_feature_names, new_feature_names)) {
+      stop('New feature does not have same column names.')
+    }
+    tapestri_object[[assay_name]][['features']][[feature_name]] = as_tibble(new_data) 
   }
   
-  current_feature_names = colnames(tapestri_object[[assay_name]]$features[[1]])
-  new_feature_names = colnames(new_data)
-  
-  if (!all.equal(current_feature_names, new_feature_names)) {
-    stop('New feature does not have same column names.')
-  }
-  
-  
-  tapestri_object[[assay_name]]$features[[feature_name]] = tibble(new_data)
   return(tapestri_object)
 }
 
@@ -169,14 +171,14 @@ add_analysis <- function(tapestri_object, assay_name, analysis_name, new_data) {
 #' @export
 filter_variants <- function(tapestri_object, gqc = 30, dpc = 10, afc = 20, mv = 50, mc = 50, mm = 1, gt.mask = FALSE) {
   
-  tapestri_object = tapestri_raw
-  gqc = 30
-  dpc = 10
-  afc = 20
-  mv = 50
-  mc = 50
-  mm = 1
-  gt.mask = FALSE
+  # tapestri_object = tapestri_raw
+  # gqc = 30
+  # dpc = 10
+  # afc = 20
+  # mv = 50
+  # mc = 50
+  # mm = 1
+  # gt.mask = FALSE
   # 
   
   
@@ -230,11 +232,115 @@ filter_variants <- function(tapestri_object, gqc = 30, dpc = 10, afc = 20, mv = 
     filtered_tapestri_object$variant$features[[layer]] = filtered_tapestri_object$variant$features[[layer]][,kept_variants]
   }
   
+  filtered_tapestri_object$variant$annotations = filtered_tapestri_object$variant$annotations[kept_variants,]
+  
   #filter cells from all assays
-  filtered_tapestri_object = filtered_tapestri_object[kept_cells,]
-  str(filtered_tapestri_object, max.level=6, vec.len = 2)
+  for(assay in names(filtered_tapestri_object)) {
+    for(layer in names(filtered_tapestri_object[[assay]]$features)) {
+      
+      filtered_tapestri_object[[assay]]$features[[layer]] = filtered_tapestri_object[[assay]]$features[[layer]][kept_cells,]    
+    }
+  }
+  
+
+  str(filtered_tapestri_object, max.level=3, vec.len = 2)
   return(filtered_tapestri_object)
 }
+
+
+
+
+
+
+
+
+#' Filter raw genotypes based on quality
+#'
+#' @param loom Loom file
+#' @param gqc Genotype quality cutoff (default 30)
+#' @param dpc Read depth cutoff (default 10)
+#' @param afc Allele frequency cutoff (default 20)
+#' @param mv Remove variants with < mv of known values (default 50)
+#' @param mc Remove variants with < mc of known values (default 50)
+#' @param mm Remove variants mutated in < mm of cells (default 1)
+#' @param gt.mask mask low quality GT as missing (if GQ/DP/AF lower than cutoff, default FALSE)
+#' @return Filtered genotypes
+#' @export
+filter_variants2 <- function(variant_assay, gqc = 30, dpc = 10, afc = 20, mv = 50, mc = 50, mm = 1, gt.mask = FALSE) {
+  
+  # variant_assay = variants
+  # gqc = 30
+  # dpc = 10
+  # afc = 20
+  # mv = 50
+  # mc = 50
+  # mm = 1
+  # gt.mask = FALSE
+  # 
+  
+  if(variant_assay@assay_name != ASSAY_NAME_VARIANT) {
+    stop("Assay is not of name variant.")
+  }
+  
+  data = variant_assay@data_layers
+  
+  gt <- as.matrix(data$NGT)
+  mask <- (gt < 3)
+  mutated <- (gt == 1 | gt == 2)
+  
+  gq <- (data$GQ >= gqc)
+  
+  
+  dp <- data$DP
+  ad <- data$AD
+  af <- matrix(100, nrow = nrow(dp), ncol = ncol(dp))
+  
+  af[mutated] <- ad[mutated] * 100 / dp[mutated]
+  af[is.na(af)] <- 0
+  af <- (af >= afc)
+  dp <- (dp >= dpc)
+  ngt_filter <- gq & dp & af & mask
+  mv.c <- base::colMeans(ngt_filter, na.rm = T) * 100
+  kept_variants <- base::which(mv.c >= mv)
+  mc.c <- base::rowMeans(ngt_filter[, kept_variants], na.rm = T) * 100
+  kept_cells <- base::which(mc.c >= mc)
+  
+  ngt_mutated <- mutated & ngt_filter
+  
+  ngt_mutated <- ngt_mutated[kept_cells, kept_variants]
+  mm.c <- base::colMeans(ngt_mutated, na.rm = T) * 100
+  
+  mv.f <- (mv.c < mv)
+  mm.f <- (mm.c < mm)
+  mv.f[!mv.f] <- mm.f
+  
+  kept_variants <- base::which(!mv.f)
+  if (!(length(kept_variants) & length(kept_cells))) {
+    stop("All cells/variants are filtered. Try different filtering settings.")
+  }
+  
+  ######## start making changes to tapestri object
+  if (gt.mask == TRUE) {
+    variant_assay@data_layers$NGT[!ngt_filter] <- 3
+  }
+  
+  filtered_variant_assay = create_assay(assay_name = ASSAY_NAME_VARIANT, 
+                                        cell_annotations = variant_assay@cell_annotations[kept_cells,],
+                                        feature_annotations = variant_assay@feature_annotations[kept_variants,]
+                                      )
+  
+  #filter variants from all layers in variants assay
+  for(layer in names(variant_assay@data_layers)){
+    filtered_variant_assay = add_data_layer(filtered_variant_assay,
+                                            layer_name = layer, 
+                                            data = variant_assay@data_layers[[layer]][kept_cells,kept_variants])
+  }
+  
+  return(filtered_variant_assay)
+}
+
+
+
 
 
 
