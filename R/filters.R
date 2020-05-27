@@ -24,9 +24,10 @@ filter_variants <- function(variant_assay, gqc = 30, dpc = 10, afc = 20, mv = 50
   # mm = 1
   # gt.mask = FALSE
   # 
-  
-  if(variant_assay@assay_name != ASSAY_NAME_VARIANT) {
-    stop("Assay is not of name variant.")
+  needed_layers = c("AD","DP","GQ","NGT")
+  check_assay = needed_layers %in% names(variant_assay@data_layers)
+  if(sum(check_assay)!=4) {
+    stop("Assay must containing")
   }
   
   data = variant_assay@data_layers

@@ -23,14 +23,18 @@ library(ggplot2)
 library(plotly)
 library(patchwork)
 
-# umap library
-library(uwot)
-
 # protein normalization library
-library(SciViews)
+#library(SciViews)
 
-# louvain clustering
-library(scran)
+packages <- c("factoextra",  "NbClust", 'scran', 'uwot')
+
+for(i in 1:length(packages)) {
+  package = packages[i]
+  if (!requireNamespace(package, quietly = TRUE))
+    install.packages(package)
+
+  require(package=package, character.only=TRUE)
+}
 
 ASSAY_NAME_VARIANT = 'dna'
 ASSAY_NAME_READ_COUNT = 'cnv'
@@ -41,17 +45,13 @@ ASSAY_NAME_PROTEIN = 'protein'
 
 ### Load data
 
-to do:
-* meta data summary? 
-* filter options identical to insights
-* annotate variant and amplicons so I can easily select
-
 ```{r load_data}
+
 
 filename <- system.file("extdata", "ABseq021.h5", package = "TapestriR")
 
 # ideally would just start by loading filtered H5, but for now will send filtering list to function to mimic
-variants = read_h5(filename = filename, assay_name = ASSAY_NAME_VARIANT, min_mutation_rate = 0.01)
+variants = read_h5(filename = filename, assay_name = ASSAY_NAME_VARIANT, min_mutation_rate = 0.005)
 
 filtered_variants = filter_variants(variants)
 
@@ -60,16 +60,21 @@ vaf[is.na(vaf)] <- 0
 
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
+### load protein assay and normalize
 protein = read_h5(filename,assay_name = ASSAY_NAME_PROTEIN)
+# normalize using clr method
 protein_counts_norm = protein@data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
+# add normalized data to protein assay
 protein = add_data_layer(protein,'normalized',protein_counts_norm)
 
+### load cnv assay 
 cnv = read_h5(filename,assay_name = ASSAY_NAME_READ_COUNT)
 
+### create multiomics object (moo)
 moo = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
-moo = add_assay(moo,filtered_variants)
-moo = add_assay(moo,cnv,keep_common_cells = TRUE)
-moo = add_assay(moo,protein, keep_common_cells = TRUE)
+moo = add_assay2(moo,filtered_variants)
+moo = add_assay2(moo,cnv,keep_common_cells = TRUE)
+moo = add_assay2(moo,protein, keep_common_cells = TRUE)
 
 experiment = moo
 ```
@@ -107,9 +112,9 @@ color_by = experiment@protein@data_layers$normalized
 
 p  = tapestri_scatterplot(x = experiment@protein@data_layers$normalized[[protein_x]], 
                  y= experiment@protein@data_layers$normalized[[protein_y]], 
-                 color_by = color_by)
-p = p + xlab(protein_x) + ylab(protein_y)
-p = p + theme_bw()  + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
+                 color_by = color_by)+ scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
+p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Protein Expression')
+p = p + theme_bw()
 p
 
 #select a few variant
@@ -119,36 +124,17 @@ color_by =  experiment@dna@data_layers$NGT %>% select(1:10) %>% mutate_all(as_fa
 p  = tapestri_scatterplot(x = experiment@protein@data_layers$normalized[[protein_x]], 
                  y= experiment@protein@data_layers$normalized[[protein_y]], 
                  color_by = color_by)
-p = p + xlab(protein_x) + ylab(protein_y)
-p = p + theme_bw()  
+p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Genotypes')
+p = p + theme_bw()
 p
-
 
 ```
 
-### Figure out how many clusters?
-
-To do: 
-
-* examples of how to choose k
-* what is in each cluster signature
+### Demension Reduction
 
 ```{r}
 
-```
-
-
-### Cluster SNV
-
-clustering by kmeans and louvain on umap projection and raw features
-
-```{r cluster snv, cache=TRUE}
-
-##################
-# do demension reduction and clustering a few different ways
-##################
-
-#dimensional reduction using umap
+### dimensional reduction using umap
 set.seed(111)
 umap_values <- umap(experiment@dna@data_layers$VAF, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
 
@@ -159,9 +145,61 @@ umap_layer = tibble(
 
 experiment@dna = add_analysis_layer(assay = experiment@dna, layer_name = 'umap_vaf', umap_layer)
 
-######
-# Hold all the different customer labels in a single structure
-#####
+```
+
+### Plot the data
+
+```{r}
+
+p = ggplot(experiment@dna@analysis_layers$umap_vaf)
+p = p + geom_point(aes(x = x, y = y), alpha = 0.5, size=0.8)
+p = p + theme_bw()
+p
+
+```
+
+
+### Figure out how many clusters?
+
+This is not a trival problem. Its left to user to explore the data. Here are a few examples on determining the number of clusters in your data. 
+
+```{r num_clusters, warning=FALSE, cache=TRUE}
+
+cluster_on = experiment@dna@analysis_layers$umap_vaf
+
+# Elbow method
+elbow = fviz_nbclust(cluster_on, kmeans, method = "wss") +
+  labs(subtitle = "Elbow method")
+
+# Silhouette method
+silhouette = fviz_nbclust(cluster_on, kmeans, method = "silhouette")+
+  labs(subtitle = "Silhouette method")
+
+# Gap statistic
+# nboot = 50 to keep the function speedy. 
+# recommended value: nboot= 500 for your analysis.
+# Use verbose = FALSE to hide computing progression.
+set.seed(123)
+gap_stat = fviz_nbclust(cluster_on, kmeans, nstart = 25,  method = "gap_stat", nboot = 25)+
+  labs(subtitle = "Gap statistic method")
+
+
+(elbow + silhouette) / 
+  (gap_stat + plot_spacer())
+
+```
+
+
+### Cluster SNV
+
+clustering by kmeans and louvain on umap projection and raw features
+
+```{r cluster snv, cache=TRUE}
+
+
+
+### Hold all the different customer labels in a single structure
+
 cluster_by = experiment@dna@analysis_layers$umap_vaf
 clusters = list()
 
@@ -214,11 +252,11 @@ p
 
 plotly so you can interactively show remove values 
 
-```{r fig.width = 12, fig.height = 12}
+```{r fig.width = 8, fig.height = 8}
  
  #%>% select(!contains('chr2:198267'))
 
-color_by = experiment@dna@data_layers$NGT %>% select(1:2) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+color_by = experiment@dna@data_layers$NGT %>% select(1:21) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
 
 
 p  = tapestri_scatterplot(

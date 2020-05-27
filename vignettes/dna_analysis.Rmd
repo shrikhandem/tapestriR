@@ -16,20 +16,26 @@ vignette: >
 ```{r include=FALSE}
 
 library(TapestriR)
-library(rhdf5)
+
+#packages needed for visualization 
 library(tidyverse)
 library(ggplot2)
 library(plotly)
 library(patchwork)
 
-# umap library
-library(uwot)
 
-# protein normalization library
-library(SciViews)
+#packages needed for analysis
 
-# louvain clustering
-library(scran)
+packages <- c("factoextra",  "NbClust", 'scran', 'uwot')
+
+for(i in 1:length(packages)) {
+  package = packages[i]
+  if (!requireNamespace(package, quietly = TRUE))
+    install.packages(package)
+
+  require(package=package, character.only=TRUE)
+}
+
 
 ASSAY_NAME_VARIANT = 'dna'
 ASSAY_NAME_READ_COUNT = 'cnv'
@@ -59,15 +65,10 @@ filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
 ```
 
-### Cluster SNV
 
-clustering by kmeans and louvain on umap projection and raw features
+### Demension Reduction
 
-```{r cluster_snv}
-
-##################
-# do demension reduction and clustering a few different ways
-##################
+```{r}
 
 #dimensional reduction using umap
 set.seed(111)
@@ -79,10 +80,62 @@ umap_layer = tibble(
 )
 
 filtered_variants = add_analysis_layer(assay = filtered_variants, layer_name = 'umap_vaf',data = umap_layer)
+
+
+```
+
+### Plot the data
+
+```{r}
+
+p = ggplot(filtered_variants@analysis_layers$umap_vaf)
+p = p + geom_point(aes(x = x, y = y), alpha = 0.5, size=0.8)
+p = p + theme_bw()
+p
+
+```
+
+
+### Figure out how many clusters?
+
+This is not a trival problem. Its left to user to explore the data. Here are a few examples on determining the number of clusters in your data. 
+
+```{r num_clusters, warning=FALSE, cache=TRUE}
+
+cluster_on = filtered_variants$data_layers$VAF
+
+# Elbow method
+elbow = fviz_nbclust(cluster_on, kmeans, method = "wss") +
+    geom_vline(xintercept = 4, linetype = 2)+
+  labs(subtitle = "Elbow method")
+
+# Silhouette method
+silhouette = fviz_nbclust(cluster_on, kmeans, method = "silhouette")+
+  labs(subtitle = "Silhouette method")
+
+# Gap statistic
+# nboot = 50 to keep the function speedy. 
+# recommended value: nboot= 500 for your analysis.
+# Use verbose = FALSE to hide computing progression.
+set.seed(123)
+gap_stat = fviz_nbclust(cluster_on, kmeans, nstart = 25,  method = "gap_stat", nboot = 5)+
+  labs(subtitle = "Gap statistic method")
+
+
+(elbow + silhouette) / 
+  (gap_stat + plot_spacer())
+
+```
+
+
+### Cluster SNV
+
+clustering by kmeans and louvain on umap projection and raw features
+
+```{r cluster_snv}
   
-######
-# Hold all the different customer labels in a single structure
-#####
+
+#### Hold all the different customer labels in a single structure
 cluster_by = filtered_variants@analysis_layers$umap_vaf
 clusters = list()
 
@@ -109,9 +162,7 @@ clusters[['features.louvain.cluster']] = as_factor(louvain_clust)
 
 
 
-#############
-## Add cluster labels to analysis data structure
-#############
+#### Add cluster labels to analysis data structure
 filtered_variants = add_analysis_layer( assay = filtered_variants,
                                            layer_name  = 'umap_vaf_clusters',
                                            data = as_tibble(clusters))

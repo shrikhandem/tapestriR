@@ -1,4 +1,7 @@
 
+ASSAY_NAME_VARIANT = 'dna'
+
+
 #' Read loom file created by Tapestri pipeline
 #'
 #' @param filename loom file path
@@ -71,6 +74,7 @@ read_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
   # min_mutation_rate = 0.1
 
   h5f = rhdf5::H5Fopen(filename)
+  #cell_annotations <- h5f$assays$dna$ra
   
   if(assay_name == ASSAY_NAME_VARIANT) {
     

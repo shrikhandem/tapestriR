@@ -1,8 +1,4 @@
 
-ASSAY_NAME_VARIANT = 'dna'
-ASSAY_NAME_READ_COUNT = 'cnv'
-ASSAY_NAME_PROTEIN = 'protein'
-
 
 #' The Tapestri_Multiomics Class
 #'
@@ -22,9 +18,7 @@ Tapestri_Multiomics <- setClass(
   Class = "Tapestri_Multiomics",
   slots = c(
     experiment_name = "character",
-    dna = "Assay",
-    cnv = "Assay",
-    protein = "Assay",
+    assays = "list",
     cell_annotations = "tbl_df" 
   )
   #,contains = c()
@@ -36,10 +30,10 @@ Tapestri_Multiomics <- setClass(
 #' @method dim Tapestri_Multiomics
 #'
 dim.Tapestri_Multiomics <- function(x) {
-  c(nrow(x@cell_annotations), nrow(x@feature_annotations))
+  c(nrow(x@cell_annotations))
 }
 
-
+#
 #' @export
 #'
 "$.Tapestri_Multiomics" <- function(x, i, ...) {
@@ -74,16 +68,12 @@ setMethod(
   definition = function(object) {
     cat('Tapestri_Multiomics Object (moo)\n')
     cat(sprintf('Experiment: %s\n', object@experiment_name))
-    cat(sprintf('%s: %s \n', ASSAY_NAME_VARIANT, .hasSlot(object, ASSAY_NAME_VARIANT)))
-    str(object[[ASSAY_NAME_VARIANT]]@data_layers, max.level = 2)
-    cat(sprintf('%s: %s \n', ASSAY_NAME_READ_COUNT, .hasSlot(object, ASSAY_NAME_READ_COUNT)))
-    str(object[[ASSAY_NAME_READ_COUNT]]@data_layers, max.level = 2)
-    cat(sprintf('%s: %s \n', ASSAY_NAME_PROTEIN, .hasSlot(object, ASSAY_NAME_PROTEIN)))
-    str(object[[ASSAY_NAME_PROTEIN]]@data_layers, max.level = 2)
+    cat(sprintf('Num Cells: %s\n', nrow(object@cell_annotations)))
+    for(assay_name in names(object@assays)) {
+      str(object@assays[[assay_name]], max.level = 2)
+    }
   }
 )
-
-
 
 
 #' Create Multiomics Object
@@ -121,10 +111,10 @@ create_moo<- function(experiment_name, cell_annotations) {
 #' @examples
 add_assay <- function(moo, assay, keep_common_cells=FALSE) {
   
-  #moo = ab21 
+  #moo = experiment 
   #assay = cnv
   
-  if(sum(assay@assay_name %in%  c('dna','cnv','protein'))==0) {
+  if(class(assay) != "Assay") {
     stop('Not a valid assay.')  
   }
 
@@ -137,30 +127,27 @@ add_assay <- function(moo, assay, keep_common_cells=FALSE) {
       interected_barcodes = dplyr::intersect(assay@cell_annotations$barcode, moo@cell_annotations$barcode)
       
       suppressWarnings(rownames(moo@cell_annotations) <- moo@cell_annotations$barcode)
-      interected_cell_annotations = moo@cell_annotations[interected_barcodes,]
+      moo@cell_annotations = moo@cell_annotations[interected_barcodes,]
       
-      new_moo = create_moo(experiment_name = moo@experiment_name,cell_annotations = interected_cell_annotations)
-      
-      for(assay_name in c('dna','cnv','protein')){
-        if(sum(moo[[assay_name]][['assay_name']] %in%  c('dna','cnv','protein')) == 1) {
-          a = cell_filter_assay(assay = moo[[assay_name]], barcodes = interected_barcodes)
-          new_moo = add_assay(moo = new_moo, assay = a)
-        }
+      #new_moo = create_moo(experiment_name = moo@experiment_name,cell_annotations = interected_cell_annotations)
+
+      for(assay_name in names(moo@assays)) {
+        a = cell_filter_assay(assay = moo@assays[[assay_name]], barcodes = interected_barcodes)
+        moo@assays[[assay_name]] = a
       }
       
-      interected_assay = cell_filter_assay(assay = assay, barcodes = interected_barcodes)
-      new_moo = add_assay(moo = new_moo, assay = interected_assay)
-      
-      return(new_moo)
+      moo@assays[[assay@assay_name]] = cell_filter_assay(assay = assay, barcodes = interected_barcodes)
+    
     } else {
       stop('Cell IDs do not match')  
     }
   } else {
     #the cell info is the same between current assays and new one
-    slot(moo,assay@assay_name) = assay    
+    moo@assays[[assay@assay_name]] = assay    
+    
   }
   
- return(moo) 
+  return(moo) 
 }
 
 
