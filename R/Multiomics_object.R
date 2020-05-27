@@ -4,9 +4,9 @@ ASSAY_NAME_READ_COUNT = 'cnv'
 ASSAY_NAME_PROTEIN = 'protein'
 
 
-#' The Multiomics Class
+#' The Tapestri_Multiomics Class
 #'
-#' Store multiomics-multisample data generated from various Tapestri pipelines
+#' Store Tapestri_Multiomics-multisample data generated from various Tapestri pipelines
 #'
 #' @slot experiment_name Experiment Name
 #' @slot dna DNA assay
@@ -14,12 +14,12 @@ ASSAY_NAME_PROTEIN = 'protein'
 #' @slot protein Protein assay
 #' @slot cell_annotations cell annotations including sample labels
 #'
-#' @name Multiomics-class
-#' @rdname Multiomics-class
-#' @exportClass Multiomics
+#' @name Tapestri_Multiomics-class
+#' @rdname Tapestri_Multiomics-class
+#' @exportClass Tapestri_Multiomics
 #'
-Multiomics <- setClass(
-  Class = "Multiomics",
+Tapestri_Multiomics <- setClass(
+  Class = "Tapestri_Multiomics",
   slots = c(
     experiment_name = "character",
     dna = "Assay",
@@ -33,22 +33,22 @@ Multiomics <- setClass(
 
 
 #' @export
-#' @method dim Multiomics
+#' @method dim Tapestri_Multiomics
 #'
-dim.Multiomics <- function(x) {
+dim.Tapestri_Multiomics <- function(x) {
   c(nrow(x@cell_annotations), nrow(x@feature_annotations))
 }
 
 
 #' @export
 #'
-"$.Multiomics" <- function(x, i, ...) {
+"$.Tapestri_Multiomics" <- function(x, i, ...) {
   return(slot(object = x, name = i))
 }
 
 #' @export
 #'
-"$<-.Multiomics" <- function(x, i, ..., value) {
+"$<-.Tapestri_Multiomics" <- function(x, i, ..., value) {
   #x[[i]] <- value
   slot(object = x, name = i) = value
   return(x)
@@ -57,9 +57,9 @@ dim.Multiomics <- function(x) {
 
 
 #' @export
-#' @method [[ Multiomics
+#' @method [[ Tapestri_Multiomics
 #'
-"[[.Multiomics" <- function(x, i, ..., drop = FALSE) {
+"[[.Tapestri_Multiomics" <- function(x, i, ..., drop = FALSE) {
   if (missing(x = i)) {
     i <- 'name'
   }
@@ -67,12 +67,12 @@ dim.Multiomics <- function(x) {
   return(data)
 }
 
-#' @method show- Multiomics
+#' @method show- Tapestri_Multiomics
 setMethod(
   f = 'show',
-  signature = 'Multiomics',
+  signature = 'Tapestri_Multiomics',
   definition = function(object) {
-    cat('Multiomics Object (moo)\n')
+    cat('Tapestri_Multiomics Object (moo)\n')
     cat(sprintf('Experiment: %s\n', object@experiment_name))
     cat(sprintf('%s: %s \n', ASSAY_NAME_VARIANT, .hasSlot(object, ASSAY_NAME_VARIANT)))
     str(object[[ASSAY_NAME_VARIANT]]@data_layers, max.level = 2)
@@ -101,7 +101,7 @@ setMethod(
 #' }
 create_moo<- function(experiment_name, cell_annotations) {
   
-  moo <- methods::new(Class = 'Multiomics',
+  moo <- methods::new(Class = 'Tapestri_Multiomics',
                         experiment_name = experiment_name,
                         cell_annotations = cell_annotations
                       )

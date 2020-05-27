@@ -7,7 +7,6 @@
 2) Install `TaprestriR`. 
 3) Start with example_analysis.Rmd in the vignettes directory. 
 
-
 ```r
 install.packages(c("devtools","BiocManager"), repos='http://cran.us.r-project.org')
 
