@@ -72,9 +72,9 @@ cnv = read_h5(filename,assay_name = ASSAY_NAME_READ_COUNT)
 
 ### create multiomics object (moo)
 moo = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
-moo = add_assay2(moo,filtered_variants)
-moo = add_assay2(moo,cnv,keep_common_cells = TRUE)
-moo = add_assay2(moo,protein, keep_common_cells = TRUE)
+moo = add_assay(moo,filtered_variants)
+moo = add_assay(moo,cnv,keep_common_cells = TRUE)
+moo = add_assay(moo,protein, keep_common_cells = TRUE)
 
 experiment = moo
 ```
@@ -101,28 +101,28 @@ protein_y = 2
 ##################
 
 #all proteins
-color_by = experiment@protein@data_layers$normalized
+color_by = experiment$assays$protein$data_layers$normalized
 
 #select a few proteins
-#color_by =  experiment@protein@data_layers$normalized %>% select('CD110','CD117')
+#color_by =  experiment$assays$protein$data_layers$normalized %>% select('CD110','CD117')
 
 #select a few variant
-#color_by =  experiment@dna@data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+#color_by =  experiment$assays$dna$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
 
 
-p  = tapestri_scatterplot(x = experiment@protein@data_layers$normalized[[protein_x]], 
-                 y= experiment@protein@data_layers$normalized[[protein_y]], 
+p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[protein_x]], 
+                 y= experiment$assays$protein$data_layers$normalized[[protein_y]], 
                  color_by = color_by)+ scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
 p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Protein Expression')
 p = p + theme_bw()
 p
 
 #select a few variant
-color_by =  experiment@dna@data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+color_by =  experiment$assays$dna$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
 
 
-p  = tapestri_scatterplot(x = experiment@protein@data_layers$normalized[[protein_x]], 
-                 y= experiment@protein@data_layers$normalized[[protein_y]], 
+p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[protein_x]], 
+                 y= experiment$assays$protein$data_layers$normalized[[protein_y]], 
                  color_by = color_by)
 p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Genotypes')
 p = p + theme_bw()
@@ -136,14 +136,14 @@ p
 
 ### dimensional reduction using umap
 set.seed(111)
-umap_values <- umap(experiment@dna@data_layers$VAF, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
+umap_values <- umap(experiment$assays$dna$data_layers$VAF, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
 
 umap_layer = tibble(    
       x = umap_values[,1],
       y = umap_values[,2]
 )
 
-experiment@dna = add_analysis_layer(assay = experiment@dna, layer_name = 'umap_vaf', umap_layer)
+experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'umap_vaf', umap_layer)
 
 ```
 
@@ -151,7 +151,7 @@ experiment@dna = add_analysis_layer(assay = experiment@dna, layer_name = 'umap_v
 
 ```{r}
 
-p = ggplot(experiment@dna@analysis_layers$umap_vaf)
+p = ggplot(experiment$assays$dna$analysis_layers$umap_vaf)
 p = p + geom_point(aes(x = x, y = y), alpha = 0.5, size=0.8)
 p = p + theme_bw()
 p
@@ -165,7 +165,7 @@ This is not a trival problem. Its left to user to explore the data. Here are a f
 
 ```{r num_clusters, warning=FALSE, cache=TRUE}
 
-cluster_on = experiment@dna@analysis_layers$umap_vaf
+cluster_on = experiment$assays$dna$analysis_layers$umap_vaf
 
 # Elbow method
 elbow = fviz_nbclust(cluster_on, kmeans, method = "wss") +
@@ -179,13 +179,13 @@ silhouette = fviz_nbclust(cluster_on, kmeans, method = "silhouette")+
 # nboot = 50 to keep the function speedy. 
 # recommended value: nboot= 500 for your analysis.
 # Use verbose = FALSE to hide computing progression.
-set.seed(123)
-gap_stat = fviz_nbclust(cluster_on, kmeans, nstart = 25,  method = "gap_stat", nboot = 25)+
-  labs(subtitle = "Gap statistic method")
+# set.seed(123)
+# gap_stat = fviz_nbclust(cluster_on, kmeans, nstart = 25,  method = "gap_stat", nboot = 25)+
+#   labs(subtitle = "Gap statistic method")
 
 
-(elbow + silhouette) / 
-  (gap_stat + plot_spacer())
+(elbow + silhouette) #/ 
+  #(gap_stat + plot_spacer())
 
 ```
 
@@ -200,7 +200,7 @@ clustering by kmeans and louvain on umap projection and raw features
 
 ### Hold all the different customer labels in a single structure
 
-cluster_by = experiment@dna@analysis_layers$umap_vaf
+cluster_by = experiment$assays$dna$analysis_layers$umap_vaf
 clusters = list()
 
 #### do the clustering
@@ -228,7 +228,7 @@ clusters[['features.louvain.cluster']] = as_factor(louvain_clust)
 #############
 ## Add cluster labels to analysis data structure
 #############
-experiment@dna = add_analysis_layer(assay = experiment@dna, layer_name = 'umap_vaf_clusters', as_tibble(clusters))
+experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'umap_vaf_clusters', as_tibble(clusters))
 
 
 ```
@@ -240,9 +240,9 @@ plot all the different clusters on the same umap projection
 ```{r fig.width = 12, fig.height = 8}
 
 p  = tapestri_scatterplot(
-                 x = experiment@dna@analysis_layers$umap_vaf$x, 
-                 y= experiment@dna@analysis_layers$umap_vaf$y, 
-                 color_by = experiment@dna@analysis_layers$umap_vaf_clusters)
+                 x = experiment$assays$dna$analysis_layers$umap_vaf$x, 
+                 y= experiment$assays$dna$analysis_layers$umap_vaf$y, 
+                 color_by = experiment$assays$dna$analysis_layers$umap_vaf_clusters)
 p = p + umap_theme() + ggtitle('umap_vaf_clusters')
 p
 
@@ -256,12 +256,12 @@ plotly so you can interactively show remove values
  
  #%>% select(!contains('chr2:198267'))
 
-color_by = experiment@dna@data_layers$NGT %>% select(1:21) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+color_by = experiment$assays$dna$data_layers$NGT %>% select(1:2) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
 
 
 p  = tapestri_scatterplot(
-                 x = experiment@dna@analysis_layers$umap_vaf$x, 
-                 y= experiment@dna@analysis_layers$umap_vaf$y, 
+                 x = experiment$assays$dna$analysis_layers$umap_vaf$x, 
+                 y= experiment$assays$dna$analysis_layers$umap_vaf$y, 
                  color_by = color_by)
 p = p + umap_theme() 
 p = p + ggtitle('Color by Genotypes')
@@ -281,17 +281,17 @@ to do:
 ```{r fig.width = 12, fig.height = 8}
 
 
-color_by = experiment@dna@analysis_layers$umap_vaf_clusters$umap.kmean.cluster.2
+color_by = experiment$assays$dna$analysis_layers$umap_vaf_clusters$umap.kmean.cluster.2
 
 p  = tapestri_scatterplot(
-                 x = experiment@dna@analysis_layers$umap_vaf$x, 
-                 y= experiment@dna@analysis_layers$umap_vaf$y, 
+                 x = experiment$assays$dna$analysis_layers$umap_vaf$x, 
+                 y= experiment$assays$dna$analysis_layers$umap_vaf$y, 
                  color_by = color_by)
 p = p + umap_theme() + ggtitle('umap_vaf_clusters') + theme(legend.position = 'none')
 
 
 v = tapestri_violinplot(clusters = color_by,
-               features = experiment@protein@data_layers$normalized)
+               features = experiment$assays$protein$data_layers$normalized)
 v = v + theme_bw() + theme(legend.position = "none",
                             axis.text.x = element_text(angle = 90, hjust = 1))
   
@@ -307,9 +307,9 @@ p / v
 ```{r fig.width = 12, fig.height = 8}
 
 p  = tapestri_scatterplot(
-                 x = experiment@dna@analysis_layers$umap_vaf$x, 
-                 y= experiment@dna@analysis_layers$umap_vaf$y, 
-                 color_by = experiment@protein@data_layers$normalized)
+                 x = experiment$assays$dna$analysis_layers$umap_vaf$x, 
+                 y= experiment$assays$dna$analysis_layers$umap_vaf$y, 
+                 color_by = experiment$assays$protein$data_layers$normalized)
 p = p + umap_theme() + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
 p = p + ggtitle('Color by Proteins')
 p
@@ -330,19 +330,19 @@ clustering by kmeans and louvain on umap projection and raw features
 
 #dimensional reduction using umap
 set.seed(111)
-umap_values <- umap(experiment@protein@data_layers$normalized, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
+umap_values <- umap(experiment$assays$protein$data_layers$normalized, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
 
 umap_layer = tibble(    
       x = umap_values[,1],
       y = umap_values[,2]
 )
 
-experiment@protein = add_analysis_layer(assay = experiment@protein, layer_name = 'umap', umap_layer)
+experiment$assays$protein = add_analysis_layer(assay = experiment$assays$protein, layer_name = 'umap', umap_layer)
   
 ######
 # Hold all the different customer labels in a single structure
 #####
-cluster_by = experiment@protein@analysis_layers$umap
+cluster_by = experiment$assays$protein$analysis_layers$umap
 clusters = list()
 
 #### do the clustering
@@ -370,7 +370,7 @@ clusters[['features.louvain.cluster']] = as_factor(louvain_clust)
 #############
 ## Add cluster labels to analysis data structure
 #############
-experiment@protein = add_analysis_layer(assay = experiment@protein, layer_name = 'clusters', as_tibble(clusters))
+experiment$assays$protein = add_analysis_layer(assay = experiment$assays$protein, layer_name = 'clusters', as_tibble(clusters))
 
 
 ```
@@ -383,9 +383,9 @@ plot all the different clusters on the same umap projection
 
 
 p  = tapestri_scatterplot(
-                 x = experiment@protein@analysis_layers$umap$x, 
-                 y= experiment@protein@analysis_layers$umap$y, 
-                 color_by = experiment@protein@analysis_layers$clusters)
+                 x = experiment$assays$protein$analysis_layers$umap$x, 
+                 y= experiment$assays$protein$analysis_layers$umap$y, 
+                 color_by = experiment$assays$protein$analysis_layers$clusters)
 
 p = p + xlab('') + ylab('')
 p = p + umap_theme() 
@@ -404,14 +404,14 @@ to do:
 ```{r fig.width = 12, fig.height = 8}
 
 p_umap  = tapestri_scatterplot(
-                 x = experiment@protein@analysis_layers$umap$x, 
-                 y= experiment@protein@analysis_layers$umap$y, 
-                 color_by = experiment@protein@analysis_layers$clusters$features.louvain.cluster) + 
+                 x = experiment$assays$protein$analysis_layers$umap$x, 
+                 y= experiment$assays$protein$analysis_layers$umap$y, 
+                 color_by = experiment$assays$protein$analysis_layers$clusters$features.louvain.cluster) + 
   xlab('') + ylab('') + umap_theme() 
 
 p_violin = tapestri_violinplot(
-           clusters = experiment@protein@analysis_layers$clusters$features.louvain.cluster,
-           features = experiment@protein@data_layers$normalized)
+           clusters = experiment$assays$protein$analysis_layers$clusters$features.louvain.cluster,
+           features = experiment$assays$protein$data_layers$normalized)
 
 p_umap / p_violin
 
@@ -423,9 +423,9 @@ p_umap / p_violin
 ```{r fig.width = 12, fig.height = 8}
 
 p  = tapestri_scatterplot(
-                 x = experiment@protein@analysis_layers$umap$x, 
-                 y= experiment@protein@analysis_layers$umap$y, 
-                 color_by = experiment@protein@data_layers$normalized)
+                 x = experiment$assays$protein$analysis_layers$umap$x, 
+                 y= experiment$assays$protein$analysis_layers$umap$y, 
+                 color_by = experiment$assays$protein$data_layers$normalized)
 p = p + umap_theme() + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
 p
 
@@ -442,7 +442,7 @@ p
 ```{r fig.width = 12, fig.height = 8, eval=FALSE}
 
 data_to_plot = tibble(
-  experiment@dna@analysis_layers$clusters,
+  experiment$assays$dna$analysis_layers$clusters,
   analysis_df$cnv$features$read_counts
 )
 
