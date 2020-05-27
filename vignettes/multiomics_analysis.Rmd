@@ -57,6 +57,7 @@ filtered_variants = filter_variants(variants)
 
 vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
 vaf[is.na(vaf)] <- 0
+
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
 protein = read_h5(filename,assay_name = ASSAY_NAME_PROTEIN)
@@ -65,12 +66,12 @@ protein = add_data_layer(protein,'normalized',protein_counts_norm)
 
 cnv = read_h5(filename,assay_name = ASSAY_NAME_READ_COUNT)
 
-ab21 = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
-ab21 = add_assay(ab21,filtered_variants)
-ab21 = add_assay(ab21,cnv,keep_common_cells = TRUE)
-ab21 = add_assay(ab21,protein, keep_common_cells = TRUE)
+moo = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
+moo = add_assay(moo,filtered_variants)
+moo = add_assay(moo,cnv,keep_common_cells = TRUE)
+moo = add_assay(moo,protein, keep_common_cells = TRUE)
 
-experiment = ab21
+experiment = moo
 ```
 
 ### X-Y plots

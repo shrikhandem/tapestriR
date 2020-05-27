@@ -48,7 +48,7 @@ to do:
 
 ```{r load data, cache=TRUE}
 
-filename <- system.file("extdata", "BL2779506.cells.loom", package = "TapestriR")
+filename <- system.file("extdata", "PE11.cells.loom", package = "TapestriR")
 
 variants = read_loom(filename,min_mutation_rate = 0.1)
 

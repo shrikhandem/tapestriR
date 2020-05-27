@@ -16,9 +16,14 @@ BiocManager::install("rhdf5")
 devtools::install_github("anupparikh/tapestri_multiomics")
 
 require(TapestriR)
+
+
 ```
 
 # Usage
+The purpose of this package is to enable easy loading of tapestri data from various different sources. The vignettes offer multiple examples of how to do an analysis of these data but it’s left to the user to explore the wide range of our packages to explore and gain insight from these data. For an easy to use solution checkout Tapestri Insights.
+
+The multiomics object is a structured way to store all of the raw and normalized data as well as the analysis performed on these data. The object ensures that all of the multiomics data is properly aligned for cells and features of the cells. ￼￼
 
 
 
