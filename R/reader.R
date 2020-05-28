@@ -18,38 +18,50 @@ read_loom <- function(filename, min_mutation_rate=0.05) {
   # min_mutation_rate = 0.1
   # experiment_name = basename(filename)
   
-  h5f = rhdf5::H5Fopen(filename)
+  assay_name = ASSAY_NAME_VARIANT
+  h5f = rhdf5::H5Fopen(filename, flags = "H5F_ACC_RDONLY")
+  #h5ls(h5f)
   
-  features=as_tibble(h5f$row_attrs)
-  cells = h5f$col_attrs
-  
-  
-  layers = h5f$layers
+  features =as_tibble(h5read(h5f,sprintf("row_attrs")))
   ngt = h5f$matrix
-  layers$NGT = ngt
-  cell_annotations = tibble(barcode=1:nrow(ngt))
   
-  
+  cell_annotations <- as_tibble(h5read(h5f,sprintf("col_attrs"))) %>% mutate_all(as.character)
+  if(nrow(cell_annotations) ==0) {
+    cell_annotations = tibble(barcode=as.character(1:nrow(ngt)))
+  }
+
   mutation_rate = apply(ngt,2, FUN = function(x) {
     sum(x %in% c(1,2)) / ncol(ngt)
   })
-  mutated_variants = mutation_rate > min_mutation_rate
-  filtered_features = features[mutated_variants,]
+  mutated_variants = which(mutation_rate > min_mutation_rate)
   
-  assay_name = ASSAY_NAME_VARIANT
+  
+  #layers = h5f$layers
+  #layers$NGT = ngt
+  
+  
+  filtered_features = features[mutated_variants,]
   
   assay = create_assay(assay_name = assay_name,
                        cell_annotations = cell_annotations,
                        feature_annotations = filtered_features)
   
-  for(layer in names(layers)) {
-    data = layers[[layer]][,mutated_variants]
+  filtered_ngt = ngt[,mutated_variants]
+  colnames(filtered_ngt) <- filtered_features$id
+  assay = add_data_layer(assay = assay,layer_name = 'NGT', data = filtered_ngt)
+  
+  layer_names = h5ls(h5f&sprintf("layers"))
+  for(layer in layer_names$name) {
+    
+    data = h5read(h5f,sprintf("layers/%s", layer), index = list(NULL,mutated_variants))
+    
+    #data = layers[[layer]][,mutated_variants]
     colnames(data) <- filtered_features$id
     assay = add_data_layer(assay = assay,layer_name = layer, data = data)
   }
   
   
-  rhdf5::H5Fclose(h5f)
+  h5closeAll()
   return(assay)
 }
 
@@ -62,49 +74,67 @@ read_loom <- function(filename, min_mutation_rate=0.05) {
 #'
 #' @return Tapestri multi-omics object
 #' @export
+#' @import rhdf5
 #' @examples
 #' \dontrun{
 #' tapestri_raw = h5_reader(filename,min_mutation_rate = 0.1)
 #' }
 read_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
   
-  # filename <- "~/Google Drive/launches/r_package/insights_v3/data/ABseq021.h5"
+  #filename <- "~/Google Drive/launches/r_package/data/merged_all.h5"
   # assay_name=ASSAY_NAME_VARIANT
   # layer = 'NGT'
   # min_mutation_rate = 0.1
 
-  h5f = rhdf5::H5Fopen(filename)
-  #cell_annotations <- h5f$assays$dna$ra
+  h5f = rhdf5::H5Fopen(filename, flags = "H5F_ACC_RDONLY")
+  #h5ls(h5f)
+  
+  features =as_tibble(h5read(h5f,sprintf("assays/%s/ca",assay_name)))
+  cell_annotations <- as_tibble(h5read(h5f,sprintf("assays/%s/ra",assay_name))) %>% mutate_all(as.character)
   
   if(assay_name == ASSAY_NAME_VARIANT) {
     
-    # filter data to make it managable in R
-    ngt = h5f$assays$dna$layers$NGT
+    # filter data to make it manageable in R
+    
+    #ngt = h5f$assays$dna$layers$NGT
+    #ngt = h5f$"assays/dna/layers/NGT"
+    
+    ngt = h5read(h5f,"assays/dna/layers/NGT")
+
+    #### todo: faster way to filter large data
     mutation_rate = apply(ngt,1, FUN = function(x) {
       sum(x %in% c(1,2)) / ncol(ngt)
     })
-    filters = mutation_rate > min_mutation_rate
+
+    #mutated <- (ngt == 1 | ngt == 2)
+    #rowMeans(mutated) * 100
+    
+    filters = which(mutation_rate > min_mutation_rate)
   } else {
-    filters = TRUE
+    
+    filters = 1:nrow(features)
   }
   
-  h5_assay = h5f$assays[[assay_name]]
-  
-  filtered_features <- as_tibble(h5_assay$ca)[filters,]
-  cell_annotations <- as_tibble(h5_assay$ra) %>% mutate_all(as.character)
+
+  filtered_features <- features[filters,]
   
   assay = create_assay(assay_name = assay_name,
                      cell_annotations = cell_annotations,
                      feature_annotations = filtered_features)
 
+  layer_names = h5ls(h5f&sprintf("assays/%s/layers",assay_name))
   
-  for(layer in names(h5_assay$layers)) {
-    data = t(h5_assay$layers[[layer]][filters, ])
+  for(layer in layer_names$name) {
+    
+    data = h5read(h5f,sprintf("assays/%s/layers/%s",assay_name,layer), index = list(filters,NULL))
+    
+    data = t(data)
     colnames(data) <- filtered_features$id
     assay = add_data_layer(assay = assay, layer_name = layer, data = data)
   }
 
-  rhdf5::H5Fclose(h5f)
-  devnull <- base::gc()
+  
+  h5closeAll()
+  
   return(assay)     
 }

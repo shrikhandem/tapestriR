@@ -1,7 +1,7 @@
 
 
 #' Simple theme to show axis-less projection of umaps
-#'
+#' @import ggplot2
 #' @return ggplot theme
 #' @export
 umap_theme <- function() {
@@ -25,6 +25,9 @@ umap_theme <- function() {
 #' @param x plot of x
 #' @param y plot of y
 #' @param color_by what features of color by 
+#'
+#' @import tidyverse
+#' @import ggplot2
 #' @return ggplot object
 #' @export
 tapestri_scatterplot <- function(x, y, color_by) {
@@ -66,6 +69,9 @@ tapestri_scatterplot <- function(x, y, color_by) {
 #' @param clusters clusters to split data by
 #' @param features features to plot as violin graph
 #'
+#' @import tidyverse
+#' @import ggplot2
+
 #' @return
 #' @export
 tapestri_violinplot <- function(clusters , features) {

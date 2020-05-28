@@ -56,7 +56,7 @@ to do:
 
 filename <- system.file("extdata", "PE11.cells.loom", package = "TapestriR")
 
-variants = read_loom(filename,min_mutation_rate = 0.1)
+variants = read_loom(filename,min_mutation_rate = 0.005)
 
 filtered_variants = filter_variants(variants)
 vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)

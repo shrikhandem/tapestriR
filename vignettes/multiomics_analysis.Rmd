@@ -17,16 +17,16 @@ vignette: >
 ```{r include=FALSE}
 
 library(TapestriR)
-library(rhdf5)
+
 library(tidyverse)
-library(ggplot2)
+theme_set(theme_bw())
 library(plotly)
 library(patchwork)
 
 # protein normalization library
 #library(SciViews)
 
-packages <- c("factoextra",  "NbClust", 'scran', 'uwot')
+packages <- c("factoextra",  "NbClust", 'scran', 'uwot','glmpca')
 
 for(i in 1:length(packages)) {
   package = packages[i]
@@ -45,6 +45,12 @@ ASSAY_NAME_PROTEIN = 'protein'
 
 ### Load data
 
+1) Load variant assay and filter 
+2) Load Protein assay and normalize
+3) Load DNA read counts
+4) create a multiomics object and merge all 3 assays. This will make sure each assay has the same cells. 
+
+
 ```{r load_data}
 
 
@@ -61,7 +67,7 @@ vaf[is.na(vaf)] <- 0
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
 ### load protein assay and normalize
-protein = read_h5(filename,assay_name = ASSAY_NAME_PROTEIN)
+protein = read_h5(filename = filename, assay_name = ASSAY_NAME_PROTEIN)
 # normalize using clr method
 protein_counts_norm = protein@data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
 # add normalized data to protein assay
@@ -81,6 +87,8 @@ experiment = moo
 
 ### X-Y plots
 
+1) select which proteins to plot on X and Y axis
+2) select set of other feature(s) to color the plot by. If you choose more then one feature, each feature will be plotted in a subplot
 
 ```{r fig.width = 12, fig.height = 8}
 
@@ -114,7 +122,6 @@ p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[
                  y= experiment$assays$protein$data_layers$normalized[[protein_y]], 
                  color_by = color_by)+ scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
 p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Protein Expression')
-p = p + theme_bw()
 p
 
 #select a few variant
@@ -125,7 +132,6 @@ p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[
                  y= experiment$assays$protein$data_layers$normalized[[protein_y]], 
                  color_by = color_by)
 p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Genotypes')
-p = p + theme_bw()
 p
 
 ```
@@ -147,13 +153,13 @@ experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_
 
 ```
 
+
 ### Plot the data
 
 ```{r}
 
 p = ggplot(experiment$assays$dna$analysis_layers$umap_vaf)
 p = p + geom_point(aes(x = x, y = y), alpha = 0.5, size=0.8)
-p = p + theme_bw()
 p
 
 ```
@@ -232,6 +238,57 @@ experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_
 
 
 ```
+
+
+### Different projections
+
+```{r projections, message=FALSE, warning=FALSE}
+
+
+L<-2 #number of latent dimensions
+
+projections = list()
+
+res1<-glmpca(experiment$assays$dna$data_layers$VAF,L,fam="poi",verbose=TRUE)
+projections[['Projection:glm_poi DR:glm_poi data:vaf']] = tibble(x = res1$loadings[,1], y = res1$loadings[,2])
+res2<-glmpca(experiment$assays$dna$data_layers$VAF,L,fam="nb",verbose=TRUE)
+projections[['Projection:glm_nb DR:glm_nb data:vaf']] = tibble(x = res2$loadings[,1], y = res2$loadings[,2])
+res3<-prcomp(experiment$assays$dna$data_layers$VAF,center=TRUE,scale.=TRUE,rank.=L)
+projections[['Projection:pca DR:pca data:vaf']] = tibble(x = res3$x[,1], y = res3$x[,2])
+
+umap_values <- umap(experiment$assays$dna$data_layers$VAF, scale=TRUE, metric="euclidean", init="laplacian", pca=20) 
+projections[['Projection:umap_euclidean DR:pca data:vaf']] = tibble(x = umap_values[,1], y = umap_values[,2])
+
+umap_values <- umap(experiment$assays$dna$data_layers$VAF, scale=TRUE, metric="cosine", init="laplacian", pca=20) 
+projections[['Projection:umap_cosine DR:pca data:vaf']] = tibble(x = umap_values[,1], y = umap_values[,2])
+
+umap_glm_poi <- umap(res1$loadings, scale=TRUE, metric="euclidean", init="laplacian", pca=20) 
+projections[['Projection:umap_euclidean DR:glm_poi data:vaf']] = tibble(x = umap_glm_poi[,1], y = umap_glm_poi[,2])
+
+umap_glm_poi <- umap(res2$loadings, scale=TRUE, metric="euclidean", init="laplacian", pca=20) 
+projections[['Projection:umap_euclidean DR:glm_nb data:vaf']] = tibble(x = umap_glm_poi[,1], y = umap_glm_poi[,2])
+
+
+experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'projections', as_tibble(projections))
+
+
+```
+
+```{r}
+color_by = experiment$assays$dna$analysis_layers$umap_vaf_clusters %>% select(features.louvain.cluster,feature.kmean.cluster.4)
+
+plots = list()
+for(projection in names(experiment$assays$dna$analysis_layers$projections)) {
+  plots[[projection]] = tapestri_scatterplot(
+                 x = experiment$assays$dna$analysis_layers$projections[[projection]]$x, 
+                 y= experiment$assays$dna$analysis_layers$projections[[projection]]$y, 
+                 color_by = color_by) + umap_theme() + ggtitle(projection)
+}
+wrap_plots(plots)
+
+
+```
+
 
 #### plot UMAP and Clusters
 

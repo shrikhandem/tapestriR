@@ -20,12 +20,14 @@ require(TapestriR)
 ```
 
 # Usage
-The purpose of this package is to enable easy loading of tapestri data from various different sources. The vignettes offer multiple examples of how to do an analysis of these data but it’s left to the user to explore the wide range of our packages to explore and gain insight from these data. For an easy to use solution checkout Tapestri Insights.
+The purpose of this package is to enable easy loading of tapestri data from various different sources. The vignettes offer multiple examples of how to do an analysis of these data but it’s left to the user to explore the wide range of our packages to gain insights. For an easy to use solution checkout Tapestri Insights.
 
-The multiomics object is a structured way to store all of the raw and normalized data as well as the analysis performed on these data. The object ensures that all of the multiomics data is properly aligned for cells and features of the cells. ￼￼
+The multiomics object is a structured way to store all of the raw and normalized data as well as the analysis performed on these data. The object ensures that all of the multiomics data is properly aligned for cells and features of the cells.
+
 
 *Multiomics Object*
 ```
+<root>
 +-- metadata                          Experiment meta data. Required to have experiment_name
 +-- assays
           +-- dna_variants            DNA Assay object
@@ -38,6 +40,7 @@ The multiomics object is a structured way to store all of the raw and normalized
 
 `dna_variants` *Assay Object*
 ```
+<root>
 +-- assay_name                        Name of Assay. Same as one of the layers in the assays slot of Multiomics object
 +-- data_layers                       1 or more layers of data. each layer must have same dimensions and matching cell barcodes (rows) and features (columns names) 
                 +--NGT                Genotype layer. 0=WT, 1=HET, 2=HOM, 3=unknown
@@ -51,6 +54,7 @@ The multiomics object is a structured way to store all of the raw and normalized
 
 `protein_read_counts` *Assay Object*
 ```
+<root>
 +-- assay_name                        Name of Assay. Same as one of the layers in the assays slot of Multiomics object
 +-- metadata                          Name of Assay. Same as one of the layers in the assays slot of Multiomics object
 +-- data_layers                       1 or more layers of data. each layer must have same dimensions and matching cell barcodes (rows) and features (columns names) 
