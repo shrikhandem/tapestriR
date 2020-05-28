@@ -9,23 +9,26 @@
 
 ```r
 install.packages(c("devtools","BiocManager"), repos='http://cran.us.r-project.org')
-
 BiocManager::install("rhdf5")
-
 devtools::install_github("anupparikh/tapestri_multiomics")
-
 require(TapestriR)
-
-
 ```
 
 # Usage
 The purpose of this package is to enable easy loading of tapestri data from various different sources. The vignettes offer multiple examples of how to do an analysis of these data but it’s left to the user to explore the wide range of our packages to gain insights. For an easy to use solution checkout Tapestri Insights.
 
+Vignettes showing how to load data and performance analysis:
+
+1) `multiomics_analysis.Rmd' - load a multiomic DNA + Protein h5 file. 
+2) `dna_analysis.Rmd' - load a DNA only loom file. 
+3) todo: load single sample or multisample data exported from Tapestri Insights
+
+# Objects
+
 The multiomics object is a structured way to store all of the raw and normalized data as well as the analysis performed on these data. The object ensures that all of the multiomics data is properly aligned for cells and features of the cells.
 
 
-*Multiomics Object*
+### Multiomics Object
 ```
 <root>
 +-- metadata                          Experiment meta data. Required to have experiment_name
@@ -38,7 +41,7 @@ The multiomics object is a structured way to store all of the raw and normalized
 
 ```
 
-`dna_variants` *Assay Object*
+#### `dna_variants` Assay Object
 ```
 <root>
 +-- assay_name                        Name of Assay. Same as one of the layers in the assays slot of Multiomics object
@@ -52,7 +55,7 @@ The multiomics object is a structured way to store all of the raw and normalized
 +-- cell_annotations                  Annotations of cells. Required to have barcode and sample name columns 
 ```
 
-`protein_read_counts` *Assay Object*
+#### `protein_read_counts` Assay Object
 ```
 <root>
 +-- assay_name                        Name of Assay. Same as one of the layers in the assays slot of Multiomics object
@@ -71,7 +74,7 @@ The multiomics object is a structured way to store all of the raw and normalized
 
 
 # Getting help
-If you have any questions or need more information about this R package or the methods it implements, please contact Mission Bio at support@missionbio.com
-You can also post questions to the github repository. 
+If you have any questions or need more information about this R package or the methods it implements, please contact Anup at parikh@missionbio.com. You can also post questions to the github repository. 
+
 # License
 AGPL-3
