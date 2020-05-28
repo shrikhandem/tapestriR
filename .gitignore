@@ -29,3 +29,7 @@ vignettes/*.pdf
 .Rproj.user
 TapestriR.Rproj
 data/merged_92542.h5
+.Rbuildignore
+doc
+Meta
+**/.DS_Store
