@@ -56,9 +56,7 @@ names.Tapestri_Multiomics <- function(x) {
 #' @export
 #'
 "$<-.Tapestri_Multiomics" <- function(x, i, ..., value) {
-  #x[[i]] <- value
-  #slot(object = x, name = i) = value
-  x = add_assay(moo = x, assay = i)
+  slot(object = x, name = i) = value
   return(x)
 }
 
@@ -72,6 +70,14 @@ names.Tapestri_Multiomics <- function(x) {
   }
   data <- slot(object = x, name = i)
   return(data)
+}
+
+#' @export
+#' @method [[<- Tapestri_Multiomics
+#'
+"[[<-.Tapestri_Multiomics" <- function(x, i, ..., value) {
+  slot(object = x, name = i) = value
+  return(x)
 }
 
 #' @method show- Tapestri_Multiomics

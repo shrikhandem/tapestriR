@@ -79,6 +79,16 @@ nrow.Tapestri_Assay <- function(x) {
   return(data)
 }
 
+
+#' @export
+#' @method [[<- Tapestri_Assay
+#'
+"[[<-.Tapestri_Assay" <- function(x, i, ..., value) {
+  slot(object = x, name = i) = value
+  return(x)
+}
+
+
 #' @method show- Tapestri_Assay
 setMethod(
   f = 'show',
