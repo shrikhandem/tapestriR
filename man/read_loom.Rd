@@ -9,7 +9,7 @@ read_loom(filename, min_mutation_rate = 0.05)
 \arguments{
 \item{filename}{loom file path}
 
-\item{min_mutation_rate}{only read variants with mutations rate higher then treshold. Primarly done to reduce size of data in memory}
+\item{min_mutation_rate}{only read variants with mutations rate higher then threshold. Primary done to reduce size of data in memory}
 }
 \value{
 Tapestri object

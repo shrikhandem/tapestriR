@@ -98,7 +98,7 @@ p
 
 ### Figure out how many clusters?
 
-This is not a trival problem. Its left to user to explore the data. Here are a few examples on determining the number of clusters in your data. 
+This is not a trivial problem. Its left to user to explore the data. Here are a few examples on determining the number of clusters in your data. 
 
 ```{r num_clusters, warning=FALSE, cache=TRUE}
 
@@ -106,7 +106,7 @@ cluster_on = filtered_variants$data_layers$VAF
 
 # Elbow method
 elbow = fviz_nbclust(cluster_on, kmeans, method = "wss") +
-    geom_vline(xintercept = 4, linetype = 2)+
+
   labs(subtitle = "Elbow method")
 
 # Silhouette method

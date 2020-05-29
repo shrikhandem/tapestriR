@@ -2,20 +2,20 @@
 % Please edit documentation in R/Assay_object.R
 \name{add_data_layer}
 \alias{add_data_layer}
-\title{Add additional layers of data to Assay Object}
+\title{Add additional layers of data to Tapestri_Assay Object}
 \usage{
 add_data_layer(assay, layer_name, data)
 }
 \arguments{
-\item{assay}{Assay object to add data to}
+\item{assay}{Tapestri_Assay object to add data to}
 
 \item{layer_name}{name of layer}
 
 \item{data}{new data to add}
 }
 \value{
-Assay Object
+Tapestri_Assay Object
 }
 \description{
-Add additional layers of data to Assay Object
+Add additional layers of data to Tapestri_Assay Object
 }

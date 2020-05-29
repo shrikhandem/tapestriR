@@ -2,7 +2,7 @@
 % Please edit documentation in R/Assay_object.R
 \name{create_assay}
 \alias{create_assay}
-\title{Create Assay Object}
+\title{Create Tapestri_Assay Object}
 \usage{
 create_assay(assay_name, cell_annotations, feature_annotations)
 }
@@ -14,10 +14,10 @@ create_assay(assay_name, cell_annotations, feature_annotations)
 \item{feature_annotations}{table of data annotating features. i.e. variant names or amplicon name}
 }
 \value{
-Assay object
+Tapestri_Assay object
 }
 \description{
-Create Assay Object
+Create Tapestri_Assay Object
 }
 \examples{
 \dontrun{

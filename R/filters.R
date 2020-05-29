@@ -40,7 +40,7 @@ filter_variants <- function(variant_assay, gqc = 30, dpc = 10, afc = 20, mv = 50
   
   
   dp <- as.matrix(data$DP)
-  ad <- (data$AD)
+  ad <- as.matrix(data$AD)
   af <- matrix(100, nrow = nrow(dp), ncol = ncol(dp))
   
   af[mutated] <- ad[mutated] * 100 / dp[mutated]

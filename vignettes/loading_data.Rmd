@@ -1,0 +1,133 @@
+---
+title: "Loading Tapestri Data"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+editor_options: 
+  chunk_output_type: console
+vignette: >
+  %\VignetteIndexEntry{Loading Tapestri Data}
+  \usepackage[utf8]{inputenc}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+
+```{r include=FALSE}
+
+library(TapestriR)
+
+#packages needed for visualization 
+library(tidyverse)
+library(patchwork)
+
+
+ASSAY_NAME_VARIANT = 'dna'
+ASSAY_NAME_READ_COUNT = 'cnv'
+ASSAY_NAME_PROTEIN = 'protein'
+
+
+
+```
+
+### Load data from Tapestri Insights Export
+
+Work for DNA only. Export can be from a multisample project in Tapestri Insights. 
+usage:
+
+1) extract exported zip file
+2) read the `NGT.csv` and `Variants.csv` files
+3) create new `Tapestri_Assay` object
+
+```{r}
+
+export_dir <- system.file("extdata", "insights_2.2_export", package = "TapestriR")
+#show files
+dir(export_dir, full.names = TRUE)
+
+experiment_name = 'RAJI/K562 mixes'
+
+ngt = read_csv(paste0(export_dir,'/', 'NGT.csv'))
+
+cell_annotations = ngt %>% select(sample=Sample, barcode=Cell) %>% mutate(barcode = as.character(barcode))
+ngt_mat = ngt %>% select(-Sample, -Cell)
+variant_annotations = read_csv(paste0(export_dir,'/', 'Variants.csv')) 
+variant_annotations = variant_annotations %>% rename(id = Variant)
+
+variant_annotations = variant_annotations %>% arrange(match(id,colnames(ngt_mat)))
+
+variants_from_insights = create_assay(assay_name = 'variants', cell_annotations = cell_annotations, feature_annotations = variant_annotations)
+
+variants_from_insights = add_data_layer(assay = variants_from_insights, layer_name = 'NGT', data = ngt_mat)
+
+moo = create_moo(experiment_name = 'variants_from_insights', cell_annotations = variants_from_insights@cell_annotations)
+moo = add_assay(moo,variants_from_insights)
+
+```
+
+
+### Load from Loom
+
+Work for DNA only. Only single sample, since loom files only contain 1 sample.  
+
+```{r load data, cache=TRUE}
+
+filename <- system.file("extdata", "PE11.cells.loom", package = "TapestriR")
+
+filename = '~/Google Drive/launches/r_package/data/AML27MBDX_190701121543.cells.loom'
+
+variants = read_loom(filename,min_mutation_rate = 0.005)
+
+filtered_variants = filter_variants(variants)
+vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
+vaf[is.na(vaf)] <- 0
+filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
+
+```
+
+
+### Load multiomics H5
+
+Works for DNA, DNA + Protein data. Also works from multisample. best practice is to create a multiassay, multisample h5 in pipeline, and apply filters before loading into R. 
+
+usage:
+
+1) Load variant assay and filter 
+2) Load Protein assay and normalize
+3) Load DNA read counts
+4) create a multiomics object and merge all 3 assays. This will make sure each assay has the same cells. 
+
+
+```{r load_data}
+
+
+filename <- system.file("extdata", "ABseq021.h5", package = "TapestriR")
+
+# ideally would just start by loading filtered H5, but for now will send filtering list to function to mimic
+variants = read_h5(filename = filename, assay_name = ASSAY_NAME_VARIANT, min_mutation_rate = 0.005)
+
+filtered_variants = filter_variants(variants)
+
+vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
+vaf[is.na(vaf)] <- 0
+
+filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
+
+### load protein assay and normalize
+protein = read_h5(filename = filename, assay_name = ASSAY_NAME_PROTEIN)
+# normalize using clr method
+protein_counts_norm = protein@data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
+# add normalized data to protein assay
+protein = add_data_layer(protein,'normalized',protein_counts_norm)
+
+### load cnv assay 
+cnv = read_h5(filename,assay_name = ASSAY_NAME_READ_COUNT)
+
+### create multiomics object (moo)
+moo = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
+moo = add_assay(moo,filtered_variants)
+moo = add_assay(moo,cnv,keep_common_cells = TRUE)
+moo = add_assay(moo,protein, keep_common_cells = TRUE)
+
+experiment = moo
+```

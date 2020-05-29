@@ -1,0 +1,300 @@
+Variant,Function,Protein,Coding impact,ClinVar,DANN,Variant type,RefSeq transcript id,Gene,cDNA,dbSNP rsids,COSMIC ids,Allele Freq (gnomAD),Whitelist,# Genotyped Cells,# Mutated Cells,K562_RAJI_1_99_mix,K562_RAJI_50_50_mix,K562_RAJI_0.5_99.5_mix,K562_RAJI_0.1_99.9_mix
+SF3B1:chr2:198266943:C/T,intronic,,,,0.31,SNV,NM_012433.4,SF3B1,c.2078-89G>A,rs788019,,,False,27375 (91%),27375 (100%),"7904 (88%) Cells Genotyped
+ 7904 (100%) Cells Mutated
+ 99.8% VAF by cell count
+ 99.7% VAF by read count","6841 (96%) Cells Genotyped
+ 6841 (100%) Cells Mutated
+ 99.8% VAF by cell count
+ 99.5% VAF by read count","6502 (90%) Cells Genotyped
+ 6502 (100%) Cells Mutated
+ 99.8% VAF by cell count
+ 99.7% VAF by read count","6128 (90%) Cells Genotyped
+ 6128 (100%) Cells Mutated
+ 99.8% VAF by cell count
+ 99.7% VAF by read count"
+SF3B1:chr2:198267384:C/A,coding,SF3B1:p.W658L,missense,,0.99,SNV,NM_012433.4,SF3B1,c.1973G>T,,COSM255979,,False,26580 (88%),131 (0%),"8454 (94%) Cells Genotyped
+ 2 (0%) Cells Mutated
+ 0.0% VAF by cell count
+ 1.6% VAF by read count","6610 (93%) Cells Genotyped
+ 23 (0%) Cells Mutated
+ 0.2% VAF by cell count
+ 1.7% VAF by read count","5785 (80%) Cells Genotyped
+ 77 (1%) Cells Mutated
+ 0.7% VAF by cell count
+ 1.7% VAF by read count","5731 (85%) Cells Genotyped
+ 29 (1%) Cells Mutated
+ 0.3% VAF by cell count
+ 1.4% VAF by read count"
+KIT:chr4:55599436:T/C,intronic,,,,0.56,SNV,NM_000222.3,KIT,c.2484+78T>C,rs1008658,,,False,20035 (67%),3725 (19%),"5136 (57%) Cells Genotyped
+ 64 (1%) Cells Mutated
+ 1.1% VAF by cell count
+ 1.1% VAF by read count","5742 (81%) Cells Genotyped
+ 3617 (63%) Cells Mutated
+ 59.9% VAF by cell count
+ 59.8% VAF by read count","4608 (64%) Cells Genotyped
+ 36 (1%) Cells Mutated
+ 0.7% VAF by cell count
+ 0.8% VAF by read count","4549 (67%) Cells Genotyped
+ 8 (0%) Cells Mutated
+ 0.1% VAF by cell count
+ 0.2% VAF by read count"
+chr6:17076840:C/A,,,,,0.29,SNV,,,,rs7754231,,,False,20487 (68%),20335 (99%),"6656 (74%) Cells Genotyped
+ 6596 (99%) Cells Mutated
+ 50.5% VAF by cell count
+ 51.6% VAF by read count","4970 (70%) Cells Genotyped
+ 4928 (99%) Cells Mutated
+ 78.7% VAF by cell count
+ 80.5% VAF by read count","4494 (62%) Cells Genotyped
+ 4468 (99%) Cells Mutated
+ 50.3% VAF by cell count
+ 51.0% VAF by read count","4367 (64%) Cells Genotyped
+ 4343 (99%) Cells Mutated
+ 50.2% VAF by cell count
+ 50.5% VAF by read count"
+chr6:17076917:ATAAG/A,,,,,,Deletion,,,,rs201233705,,,False,22490 (75%),18556 (83%),"7126 (80%) Cells Genotyped
+ 6985 (98%) Cells Mutated
+ 49.6% VAF by cell count
+ 50.0% VAF by read count","5949 (83%) Cells Genotyped
+ 2253 (38%) Cells Mutated
+ 19.3% VAF by cell count
+ 16.7% VAF by read count","4714 (65%) Cells Genotyped
+ 4655 (99%) Cells Mutated
+ 49.6% VAF by cell count
+ 50.4% VAF by read count","4701 (69%) Cells Genotyped
+ 4663 (99%) Cells Mutated
+ 49.9% VAF by cell count
+ 51.2% VAF by read count"
+chr6:40116264:T/G,,,,,0.26,SNV,,,,rs12194361,,,False,27556 (92%),27178 (99%),"8644 (97%) Cells Genotyped
+ 8542 (99%) Cells Mutated
+ 50.1% VAF by cell count
+ 48.0% VAF by read count","6627 (93%) Cells Genotyped
+ 6411 (97%) Cells Mutated
+ 77.7% VAF by cell count
+ 78.2% VAF by read count","6210 (86%) Cells Genotyped
+ 6180 (100%) Cells Mutated
+ 50.2% VAF by cell count
+ 47.9% VAF by read count","6075 (90%) Cells Genotyped
+ 6045 (100%) Cells Mutated
+ 49.9% VAF by cell count
+ 47.4% VAF by read count"
+chr6:62094287:A/T,,,,,0.42,SNV,,,,rs2879962,,,False,15481 (51%),15481 (100%),"5953 (66%) Cells Genotyped
+ 5953 (100%) Cells Mutated
+ 99.9% VAF by cell count
+ 99.9% VAF by read count","2863 (40%) Cells Genotyped
+ 2863 (100%) Cells Mutated
+ 100.0% VAF by cell count
+ 100.0% VAF by read count","2879 (40%) Cells Genotyped
+ 2879 (100%) Cells Mutated
+ 99.9% VAF by cell count
+ 100.0% VAF by read count","3786 (56%) Cells Genotyped
+ 3786 (100%) Cells Mutated
+ 99.9% VAF by cell count
+ 100.0% VAF by read count"
+chr6:62094328:T/A,,,,,0.39,SNV,,,,rs2879961,,,False,15229 (51%),15229 (100%),"5857 (65%) Cells Genotyped
+ 5857 (100%) Cells Mutated
+ 99.9% VAF by cell count
+ 99.9% VAF by read count","2812 (39%) Cells Genotyped
+ 2812 (100%) Cells Mutated
+ 100.0% VAF by cell count
+ 99.9% VAF by read count","2854 (40%) Cells Genotyped
+ 2854 (100%) Cells Mutated
+ 99.9% VAF by cell count
+ 99.9% VAF by read count","3706 (55%) Cells Genotyped
+ 3706 (100%) Cells Mutated
+ 100.0% VAF by cell count
+ 100.0% VAF by read count"
+EZH2:chr7:148504716:AG/A,3'utr,,,Benign,,Deletion (homopolymer),NM_004456.5,EZH2,c.*21delC,rs3217095,COSN20104935,0.68,False,26778 (89%),26619 (99%),"7884 (88%) Cells Genotyped
+ 7841 (99%) Cells Mutated
+ 99.0% VAF by cell count
+ 98.2% VAF by read count","6270 (88%) Cells Genotyped
+ 6160 (98%) Cells Mutated
+ 97.9% VAF by cell count
+ 96.1% VAF by read count","6527 (90%) Cells Genotyped
+ 6527 (100%) Cells Mutated
+ 99.4% VAF by cell count
+ 99.0% VAF by read count","6097 (90%) Cells Genotyped
+ 6091 (100%) Cells Mutated
+ 99.5% VAF by cell count
+ 98.9% VAF by read count"
+EZH2:chr7:148504818:A/G,intronic,,,Benign,0.56,SNV,NM_004456.5,EZH2,c.2196-20T>C,rs116768205,,0.00,False,25024 (83%),24564 (98%),"8715 (97%) Cells Genotyped
+ 8708 (100%) Cells Mutated
+ 50.2% VAF by cell count
+ 49.5% VAF by read count","3219 (45%) Cells Genotyped
+ 2770 (86%) Cells Mutated
+ 43.3% VAF by cell count
+ 35.4% VAF by read count","6689 (93%) Cells Genotyped
+ 6688 (100%) Cells Mutated
+ 50.2% VAF by cell count
+ 50.2% VAF by read count","6401 (94%) Cells Genotyped
+ 6398 (100%) Cells Mutated
+ 50.3% VAF by cell count
+ 50.5% VAF by read count"
+EZH2:chr7:148504854:A/AGACTT,intronic,,,Benign,,Insertion,NM_004456.5,EZH2,c.2196-61_2196-57dupAAGTC,rs560966145,"COSN31768741, COSN31768876",,False,28890 (96%),28774 (100%),"8855 (99%) Cells Genotyped
+ 8809 (99%) Cells Mutated
+ 50.5% VAF by cell count
+ 51.1% VAF by read count","6869 (96%) Cells Genotyped
+ 6856 (100%) Cells Mutated
+ 78.1% VAF by cell count
+ 81.5% VAF by read count","6762 (94%) Cells Genotyped
+ 6736 (100%) Cells Mutated
+ 50.3% VAF by cell count
+ 50.7% VAF by read count","6404 (95%) Cells Genotyped
+ 6373 (100%) Cells Mutated
+ 50.0% VAF by cell count
+ 49.8% VAF by read count"
+chr10:5554293:T/C,,,,,0.77,SNV,,,,rs10904520,,,False,14933 (50%),14592 (98%),"6039 (67%) Cells Genotyped
+ 5932 (98%) Cells Mutated
+ 49.8% VAF by cell count
+ 49.5% VAF by read count","4152 (58%) Cells Genotyped
+ 3984 (96%) Cells Mutated
+ 48.4% VAF by cell count
+ 40.8% VAF by read count","2181 (30%) Cells Genotyped
+ 2157 (99%) Cells Mutated
+ 49.8% VAF by cell count
+ 49.7% VAF by read count","2561 (38%) Cells Genotyped
+ 2519 (98%) Cells Mutated
+ 49.6% VAF by cell count
+ 49.6% VAF by read count"
+chr10:77210191:C/T,,,,,0.71,SNV,,,,rs7072873,,,False,20082 (67%),19707 (98%),"7045 (79%) Cells Genotyped
+ 6843 (97%) Cells Mutated
+ 50.9% VAF by cell count
+ 51.5% VAF by read count","5541 (78%) Cells Genotyped
+ 5458 (99%) Cells Mutated
+ 81.5% VAF by cell count
+ 84.2% VAF by read count","3173 (44%) Cells Genotyped
+ 3153 (99%) Cells Mutated
+ 50.4% VAF by cell count
+ 51.2% VAF by read count","4323 (64%) Cells Genotyped
+ 4253 (98%) Cells Mutated
+ 50.3% VAF by cell count
+ 50.7% VAF by read count"
+SORCS3:chr10:106721610:G/A,intronic,,,,0.63,SNV,NM_014978.3,SORCS3,c.796-15483G>A,rs7909012,,,False,19477 (65%),19477 (100%),"6106 (68%) Cells Genotyped
+ 6106 (100%) Cells Mutated
+ 99.7% VAF by cell count
+ 99.7% VAF by read count","4552 (64%) Cells Genotyped
+ 4552 (100%) Cells Mutated
+ 99.6% VAF by cell count
+ 99.5% VAF by read count","4929 (68%) Cells Genotyped
+ 4929 (100%) Cells Mutated
+ 99.7% VAF by cell count
+ 99.8% VAF by read count","3890 (57%) Cells Genotyped
+ 3890 (100%) Cells Mutated
+ 99.5% VAF by cell count
+ 99.8% VAF by read count"
+FLT3:chr13:28602226:AAG/A,intronic,,,,,Deletion (homopolymer),NM_004119.3,FLT3,c.2053+87_2053+88delCT,rs35884842,COSN31712162,,False,24406 (81%),24381 (100%),"8451 (94%) Cells Genotyped
+ 8442 (100%) Cells Mutated
+ 50.0% VAF by cell count
+ 47.3% VAF by read count","3942 (55%) Cells Genotyped
+ 3941 (100%) Cells Mutated
+ 53.0% VAF by cell count
+ 55.1% VAF by read count","6077 (84%) Cells Genotyped
+ 6069 (100%) Cells Mutated
+ 50.1% VAF by cell count
+ 49.7% VAF by read count","5936 (88%) Cells Genotyped
+ 5929 (100%) Cells Mutated
+ 50.0% VAF by cell count
+ 49.0% VAF by read count"
+chr14:56969005:C/T,,,,,0.71,SNV,,,,rs12587027,,,False,25216 (84%),1971 (8%),"8191 (91%) Cells Genotyped
+ 7 (0%) Cells Mutated
+ 0.1% VAF by cell count
+ 0.2% VAF by read count","4728 (66%) Cells Genotyped
+ 1960 (41%) Cells Mutated
+ 40.3% VAF by cell count
+ 25.6% VAF by read count","6265 (87%) Cells Genotyped
+ 1 (0%) Cells Mutated
+ 0.0% VAF by cell count
+ 0.1% VAF by read count","6032 (89%) Cells Genotyped
+ 3 (0%) Cells Mutated
+ 0.0% VAF by cell count
+ 0.2% VAF by read count"
+IDH2:chr15:90631985:A/G,"intronic, splicing",,,,0.60,SNV,NM_002168.4,IDH2,c.374-6T>C,,,,False,18016 (60%),17297 (96%),"6253 (70%) Cells Genotyped
+ 6130 (98%) Cells Mutated
+ 49.0% VAF by cell count
+ 30.3% VAF by read count","4051 (57%) Cells Genotyped
+ 3731 (92%) Cells Mutated
+ 46.1% VAF by cell count
+ 28.1% VAF by read count","3818 (53%) Cells Genotyped
+ 3691 (97%) Cells Mutated
+ 48.3% VAF by cell count
+ 31.1% VAF by read count","3894 (57%) Cells Genotyped
+ 3745 (96%) Cells Mutated
+ 48.1% VAF by cell count
+ 30.0% VAF by read count"
+TP53:chr17:7577581:A/G,coding,TP53:p.Y195H,missense,"Likely Pathogenic, Pathogenic",1.00,SNV,NM_001276760.2,TP53,c.583T>C,rs864622237,COSM11152,,False,22818 (76%),18946 (83%),"6874 (77%) Cells Genotyped
+ 6758 (98%) Cells Mutated
+ 49.5% VAF by cell count
+ 49.5% VAF by read count","6315 (89%) Cells Genotyped
+ 2655 (42%) Cells Mutated
+ 21.3% VAF by cell count
+ 20.1% VAF by read count","4553 (63%) Cells Genotyped
+ 4495 (99%) Cells Mutated
+ 49.7% VAF by cell count
+ 49.6% VAF by read count","5076 (75%) Cells Genotyped
+ 5038 (99%) Cells Mutated
+ 49.9% VAF by cell count
+ 49.7% VAF by read count"
+TP53:chr17:7578115:T/C,intronic,,,Benign,0.65,SNV,NM_001276760.2,TP53,c.555+62A>G,rs1625895,COSN31722649,0.86,False,27436 (91%),27302 (100%),"8678 (97%) Cells Genotyped
+ 8626 (99%) Cells Mutated
+ 50.5% VAF by cell count
+ 50.9% VAF by read count","6668 (94%) Cells Genotyped
+ 6637 (100%) Cells Mutated
+ 78.3% VAF by cell count
+ 79.1% VAF by read count","5934 (82%) Cells Genotyped
+ 5906 (100%) Cells Mutated
+ 50.3% VAF by cell count
+ 51.2% VAF by read count","6156 (91%) Cells Genotyped
+ 6133 (100%) Cells Mutated
+ 50.1% VAF by cell count
+ 50.6% VAF by read count"
+TP53:chr17:7578211:C/T,coding,TP53:p.R174Q,missense,Pathogenic,1.00,SNV,NM_001276760.2,TP53,c.521G>A,rs587778720,COSM10735,0.00,False,26883 (89%),22755 (85%),"8658 (97%) Cells Genotyped
+ 8505 (98%) Cells Mutated
+ 49.4% VAF by cell count
+ 49.6% VAF by read count","6591 (92%) Cells Genotyped
+ 2732 (41%) Cells Mutated
+ 21.0% VAF by cell count
+ 19.7% VAF by read count","5639 (78%) Cells Genotyped
+ 5564 (99%) Cells Mutated
+ 49.5% VAF by cell count
+ 49.9% VAF by read count","5995 (88%) Cells Genotyped
+ 5954 (99%) Cells Mutated
+ 49.8% VAF by cell count
+ 49.1% VAF by read count"
+RAB31:chr18:9750662:T/C,intronic,,,,0.30,SNV,NM_006868.4,RAB31,c.40-24613T>C,rs8091737,,,False,21107 (70%),21098 (100%),"6051 (68%) Cells Genotyped
+ 6051 (100%) Cells Mutated
+ 99.2% VAF by cell count
+ 99.1% VAF by read count","6073 (85%) Cells Genotyped
+ 6064 (100%) Cells Mutated
+ 67.7% VAF by cell count
+ 66.7% VAF by read count","4412 (61%) Cells Genotyped
+ 4412 (100%) Cells Mutated
+ 99.5% VAF by cell count
+ 99.5% VAF by read count","4571 (67%) Cells Genotyped
+ 4571 (100%) Cells Mutated
+ 99.8% VAF by cell count
+ 99.8% VAF by read count"
+ASXL1:chr20:31022959:T/C,coding,ASXL1:p.L815P,missense,Not Provided,0.31,SNV,NM_015338.6,ASXL1,c.2444T>C,rs6058694,,1.00,False,24392 (81%),24392 (100%),"7842 (88%) Cells Genotyped
+ 7842 (100%) Cells Mutated
+ 99.9% VAF by cell count
+ 99.8% VAF by read count","6518 (91%) Cells Genotyped
+ 6518 (100%) Cells Mutated
+ 99.9% VAF by cell count
+ 99.7% VAF by read count","4464 (62%) Cells Genotyped
+ 4464 (100%) Cells Mutated
+ 99.9% VAF by cell count
+ 99.9% VAF by read count","5568 (82%) Cells Genotyped
+ 5568 (100%) Cells Mutated
+ 99.9% VAF by cell count
+ 99.9% VAF by read count"
+U2AF1:chr21:44524505:A/C,"coding, splicing",U2AF1:p.C18G,missense,,0.98,SNV,NM_006758.2,U2AF1,c.52T>G,,,,False,16362 (54%),12169 (74%),"5038 (56%) Cells Genotyped
+ 3781 (75%) Cells Mutated
+ 37.5% VAF by cell count
+ 26.5% VAF by read count","4057 (57%) Cells Genotyped
+ 1910 (47%) Cells Mutated
+ 23.5% VAF by cell count
+ 21.2% VAF by read count","3948 (55%) Cells Genotyped
+ 3667 (93%) Cells Mutated
+ 46.4% VAF by cell count
+ 34.0% VAF by read count","3319 (49%) Cells Genotyped
+ 2811 (85%) Cells Mutated
+ 42.3% VAF by cell count
+ 32.0% VAF by read count"

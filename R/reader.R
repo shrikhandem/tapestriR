@@ -5,7 +5,7 @@ ASSAY_NAME_VARIANT = 'dna'
 #' Read loom file created by Tapestri pipeline
 #'
 #' @param filename loom file path
-#' @param min_mutation_rate only read variants with mutations rate higher then treshold. Primarly done to reduce size of data in memory
+#' @param min_mutation_rate only read variants with mutations rate higher then threshold. Primary done to reduce size of data in memory
 #' @return Tapestri object
 #' @export
 #' @examples
@@ -27,17 +27,20 @@ read_loom <- function(filename, min_mutation_rate=0.05) {
   
   cell_annotations <- as_tibble(h5read(h5f,sprintf("col_attrs"))) %>% mutate_all(as.character)
   if(nrow(cell_annotations) ==0) {
-    cell_annotations = tibble(barcode=as.character(1:nrow(ngt)))
+    cell_annotations = tibble(
+      sample=rep(basename(filename),nrow(ngt)),
+      barcode=as.character(1:nrow(ngt))
+    )
   }
 
-  mutation_rate = apply(ngt,2, FUN = function(x) {
-    sum(x %in% c(1,2)) / ncol(ngt)
-  })
+  # mutation_rate = apply(ngt,2, FUN = function(x) {
+  #   sum(x %in% c(1,2)) / ncol(ngt)
+  # })
+   
+  mutated <- (ngt == 1 | ngt == 2)
+  mutation_rate <- base::colMeans(mutated, na.rm = T)
+
   mutated_variants = which(mutation_rate > min_mutation_rate)
-  
-  
-  #layers = h5f$layers
-  #layers$NGT = ngt
   
   
   filtered_features = features[mutated_variants,]
@@ -91,6 +94,9 @@ read_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
   
   features =as_tibble(h5read(h5f,sprintf("assays/%s/ca",assay_name)))
   cell_annotations <- as_tibble(h5read(h5f,sprintf("assays/%s/ra",assay_name))) %>% mutate_all(as.character)
+  if(!'sample' %in% colnames(cell_annotations)){
+    cell_annotations = cell_annotations %>% mutate(sample=basename(filename))
+  }
   
   if(assay_name == ASSAY_NAME_VARIANT) {
     
@@ -102,14 +108,17 @@ read_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
     ngt = h5read(h5f,"assays/dna/layers/NGT")
 
     #### todo: faster way to filter large data
-    mutation_rate = apply(ngt,1, FUN = function(x) {
-      sum(x %in% c(1,2)) / ncol(ngt)
-    })
-
+    # mutation_rate = apply(ngt,1, FUN = function(x) {
+    #   sum(x %in% c(1,2)) / ncol(ngt)
+    # })
+    # 
     #mutated <- (ngt == 1 | ngt == 2)
     #rowMeans(mutated) * 100
     
+    mutated <- (ngt == 1 | ngt == 2)
+    mutation_rate <- base::rowMeans(mutated, na.rm = T)
     filters = which(mutation_rate > min_mutation_rate)
+    
   } else {
     
     filters = 1:nrow(features)

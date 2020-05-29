@@ -4,11 +4,9 @@
 #'
 #' Store Tapestri_Multiomics-multisample data generated from various Tapestri pipelines
 #'
-#' @slot experiment_name Experiment Name
-#' @slot dna DNA assay
-#' @slot cnv read counts
-#' @slot protein Protein assay
 #' @slot cell_annotations cell annotations including sample labels
+#' @slot assays 
+#' @slot metadata 
 #'
 #' @name Tapestri_Multiomics-class
 #' @rdname Tapestri_Multiomics-class
@@ -17,7 +15,7 @@
 Tapestri_Multiomics <- setClass(
   Class = "Tapestri_Multiomics",
   slots = c(
-    experiment_name = "character",
+    metadata ="list",
     assays = "list",
     cell_annotations = "tbl_df" 
   )
@@ -33,6 +31,21 @@ dim.Tapestri_Multiomics <- function(x) {
   c(nrow(x@cell_annotations))
 }
 
+#' @export
+#' @method names Tapestri_Multiomics
+#'
+names.Tapestri_Multiomics <- function(x) {
+  slotNames(x)
+}
+
+#
+#' @export
+#'
+#' @import utils
+.DollarNames.Tapestri_Multiomics <- function(x, pattern = "") {
+  grep(pattern, slotNames(x), value=TRUE)
+}
+
 #
 #' @export
 #'
@@ -44,10 +57,10 @@ dim.Tapestri_Multiomics <- function(x) {
 #'
 "$<-.Tapestri_Multiomics" <- function(x, i, ..., value) {
   #x[[i]] <- value
-  slot(object = x, name = i) = value
+  #slot(object = x, name = i) = value
+  x = add_assay(moo = x, assay = i)
   return(x)
 }
-
 
 
 #' @export
@@ -67,10 +80,10 @@ setMethod(
   signature = 'Tapestri_Multiomics',
   definition = function(object) {
     cat('Tapestri_Multiomics Object (moo)\n')
-    cat(sprintf('Experiment: %s\n', object@experiment_name))
+    cat(sprintf('Experiment: %s\n', object@metadata$experiment_name))
     cat(sprintf('Num Cells: %s\n', nrow(object@cell_annotations)))
     for(assay_name in names(object@assays)) {
-      str(object@assays[[assay_name]], max.level = 2)
+      str(object@assays[[assay_name]], max.level = 2,give.attr = FALSE)
     }
   }
 )
@@ -78,21 +91,21 @@ setMethod(
 
 #' Create Multiomics Object
 #'
-#' @param data data
-#' @param type assay type
-#' @param name sample name
-#' @return Analyte Analyte object
+#' @param experiment_name Name of Experiment
+#' @param cell_annotations table of cell annotations. All in this object must match these cell annotations
+#'
+#' @return Tapestri_Multiomics Object (moo)
 #' @importFrom methods new
 #' @export
 #' @examples
 #' \dontrun{
-#' genotypes <- extract_genotypes(loom, barcodes, gt.mask=TRUE)
-#' assay <- create_assay(genotypes, "snv", "sample")
 #' }
 create_moo<- function(experiment_name, cell_annotations) {
   
+  metadata = list(experiment_name = experiment_name)
+  moo@metadata[['cell_info']] = cell_annotations %>% group_by(sample) %>% summarise(cells=n())
   moo <- methods::new(Class = 'Tapestri_Multiomics',
-                        experiment_name = experiment_name,
+                        metadata = metadata,
                         cell_annotations = cell_annotations
                       )
   return(moo)
@@ -114,7 +127,7 @@ add_assay <- function(moo, assay, keep_common_cells=FALSE) {
   #moo = experiment 
   #assay = cnv
   
-  if(class(assay) != "Assay") {
+  if(class(assay) != "Tapestri_Assay") {
     stop('Not a valid assay.')  
   }
 
@@ -146,7 +159,9 @@ add_assay <- function(moo, assay, keep_common_cells=FALSE) {
     moo@assays[[assay@assay_name]] = assay    
     
   }
+  moo@metadata[['cell_info']] = moo@cell_annotations %>% group_by(sample) %>% summarise(cells=n())
   
+
   return(moo) 
 }
 
@@ -163,6 +178,9 @@ cell_filter_assay<- function(assay, barcodes) {
   }
   suppressWarnings(rownames(assay@cell_annotations) <- assay@cell_annotations$barcode)
   assay@cell_annotations = assay@cell_annotations[barcodes,]
+  
+  assay@metadata[['cell_info']] = assay@cell_annotations %>% group_by(sample) %>% summarise(cell=n())
+  
   return(assay)
 }
 
