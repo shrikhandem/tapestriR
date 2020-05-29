@@ -151,9 +151,9 @@ add_data_layer<- function(assay, layer_name, data) {
   if (col_check != TRUE) {
     stop(sprintf('New feature does not have same column names.\n%s', col_check))
   }
-  
-  if(!all.equal(dim(data), dim(assay))){
-    stop(paste0('Annotations not the same length as features.'))
+  dim_check = all.equal(dim(data), dim(assay))
+  if(dim_check !=TRUE){
+    stop(sprintf('Annotations not the same length as features.\n%s', dim_check))
   }
   
   suppressWarnings(
@@ -181,6 +181,7 @@ add_analysis_layer<- function(assay, layer_name, data) {
   if(nrow(assay) != nrow(data)){
     stop(paste0("analysis layer must have same number or rows (cells) as assay."))
   }
+  
   
   suppressWarnings(rownames(data) <- assay@cell_annotations$barcode)
   assay@analysis_layers[[layer_name]] = as_tibble(data, rownames=NA)

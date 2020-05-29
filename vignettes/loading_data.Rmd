@@ -42,8 +42,9 @@ usage:
 ```{r}
 
 export_dir <- system.file("extdata", "insights_2.2_export", package = "TapestriR")
+
 #show files
-dir(export_dir, full.names = TRUE)
+dir(export_dir)
 
 experiment_name = 'RAJI/K562 mixes'
 
@@ -72,10 +73,11 @@ Work for DNA only. Only single sample, since loom files only contain 1 sample.
 
 ```{r load data, cache=TRUE}
 
-filename <- system.file("extdata", "PE11.cells.loom", package = "TapestriR")
+#filename <- system.file("extdata", "PE11.cells.loom", package = "TapestriR")
 
 #big file
-#filename = '~/Google Drive/launches/r_package/data/AML27MBDX_190701121543.cells.loom'
+filename = '~/Google Drive/launches/r_package/data/AML27MBDX_190701121543.cells.loom'
+filename = '~/Google Drive/launches/r_package/data/BL2779506.cells.loom'
 
 variants = read_loom(filename,min_mutation_rate = 0.05)
 
