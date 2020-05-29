@@ -94,7 +94,6 @@ setMethod(
   f = 'show',
   signature = 'Tapestri_Assay',
   definition = function(object) {
-    cat(sprintf('Tapestri_Assay: %s\n',object@assay_name))
     cat(str(object,max.level = 3, give.attr = FALSE, vec.len = 2))
 
   }

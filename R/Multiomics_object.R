@@ -85,7 +85,6 @@ setMethod(
   f = 'show',
   signature = 'Tapestri_Multiomics',
   definition = function(object) {
-    cat('Tapestri_Multiomics Object (moo)\n')
     cat(sprintf('Experiment: %s\n', object@metadata$experiment_name))
     cat(sprintf('Num Cells: %s\n', nrow(object@cell_annotations)))
     for(assay_name in names(object@assays)) {
