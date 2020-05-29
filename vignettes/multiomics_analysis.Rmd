@@ -26,7 +26,7 @@ library(patchwork)
 # protein normalization library
 #library(SciViews)
 
-packages <- c("factoextra",  "NbClust", 'scran', 'uwot','glmpca')
+packages <- c("factoextra",  "NbClust", 'scran', 'uwot','glmpca', 'ComplexHeatmap')
 
 for(i in 1:length(packages)) {
   package = packages[i]
@@ -240,7 +240,9 @@ experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_
 ```
 
 
-### Different projections
+## Different projections
+
+Testing out different projections. When to use which is open question. 
 
 ```{r projections, message=FALSE, warning=FALSE}
 
@@ -274,7 +276,11 @@ experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_
 
 ```
 
-```{r}
+## Plot all the different projections
+
+can you tell which method is best from plotting? 
+
+```{r fig.width = 12, fig.height = 8}
 color_by = experiment$assays$dna$analysis_layers$umap_vaf_clusters %>% select(features.louvain.cluster,feature.kmean.cluster.4)
 
 plots = list()
@@ -292,7 +298,8 @@ wrap_plots(plots)
 
 #### plot UMAP and Clusters
 
-plot all the different clusters on the same umap projection
+plot all the different clusters on the same umap projection.
+change the x and y to use different projections
 
 ```{r fig.width = 12, fig.height = 8}
 
@@ -309,7 +316,7 @@ p
 
 plotly so you can interactively show remove values 
 
-```{r fig.width = 8, fig.height = 8}
+```{r fig.width = 12, fig.height = 8}
  
  #%>% select(!contains('chr2:198267'))
 
@@ -523,7 +530,33 @@ p
 ```
 
 #### Heatmap
+
+To do
+
+* row orders and clustering should be done outside of heatmap. heatmap is only for visualization 
+*  
+
 ```{r}
+
+legend_params <- list(title = "Genotype", at = c(0, 1, 2, 3),
+                          border = "black", labels = c("WT", "HET", "HOM", "Missing"), 
+                          title_gp = grid::gpar(fontsize = 10, fontface = "bold"), 
+                          labels_gp = grid::gpar(fontsize = 7), legend_height = 5, legend_width = 5, 
+                          grid_height = grid::unit(5, "mm"), grid_width = grid::unit(5, "mm"))
+
+genotypes.mat = experiment$assays$dna@data_layers$NGT
+cluster = experiment$assays$dna@analysis_layers$umap_vaf_clusters$umap.kmean.cluster.2
+
+snv.h <- ComplexHeatmap::Heatmap(as.matrix(genotypes.mat), name = "GT",
+                                 column_order = colnames(genotypes.mat), split=factor(cluster),
+                                 show_row_names=FALSE, row_title_gp = grid::gpar(fontsize = 6),
+                                 
+                                 col=c("grey", "red", "darkred", "white"), 
+                                 heatmap_legend_param=legend_params,
+                                 column_names_gp = grid::gpar(fontsize=8),
+                                 show_column_dend=FALSE)
+
+
 
 ```
 
