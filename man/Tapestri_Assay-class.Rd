@@ -20,5 +20,7 @@ Store assay specific details for given sample
 \item{\code{data_layers}}{}
 
 \item{\code{analysis_layers}}{}
+
+\item{\code{metadata}}{}
 }}
 

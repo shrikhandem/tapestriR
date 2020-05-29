@@ -61,8 +61,8 @@ variants_from_insights = create_assay(assay_name = 'variants', cell_annotations 
 variants_from_insights = add_data_layer(assay = variants_from_insights, layer_name = 'NGT', data = ngt_mat)
 
 moo = create_moo(experiment_name = 'variants_from_insights', cell_annotations = variants_from_insights@cell_annotations)
-moo = add_assay(moo,variants_from_insights)
-
+moo = add_assay(moo = moo, assay = variants_from_insights)
+moo_from_insights = moo
 ```
 
 
@@ -74,14 +74,16 @@ Work for DNA only. Only single sample, since loom files only contain 1 sample.
 
 filename <- system.file("extdata", "PE11.cells.loom", package = "TapestriR")
 
-filename = '~/Google Drive/launches/r_package/data/AML27MBDX_190701121543.cells.loom'
+#big file
+#filename = '~/Google Drive/launches/r_package/data/AML27MBDX_190701121543.cells.loom'
 
-variants = read_loom(filename,min_mutation_rate = 0.005)
+variants = read_loom(filename,min_mutation_rate = 0.05)
 
 filtered_variants = filter_variants(variants)
 vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
 vaf[is.na(vaf)] <- 0
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
+
 
 ```
 
@@ -104,7 +106,7 @@ usage:
 filename <- system.file("extdata", "ABseq021.h5", package = "TapestriR")
 
 # ideally would just start by loading filtered H5, but for now will send filtering list to function to mimic
-variants = read_h5(filename = filename, assay_name = ASSAY_NAME_VARIANT, min_mutation_rate = 0.005)
+variants = read_h5(filename = filename, assay_name = ASSAY_NAME_VARIANT, min_mutation_rate = 0.05)
 
 filtered_variants = filter_variants(variants)
 

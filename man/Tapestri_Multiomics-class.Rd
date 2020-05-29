@@ -11,14 +11,10 @@ Store Tapestri_Multiomics-multisample data generated from various Tapestri pipel
 \section{Slots}{
 
 \describe{
-\item{\code{experiment_name}}{Experiment Name}
-
-\item{\code{dna}}{DNA assay}
-
-\item{\code{cnv}}{read counts}
-
-\item{\code{protein}}{Protein assay}
-
 \item{\code{cell_annotations}}{cell annotations including sample labels}
+
+\item{\code{assays}}{}
+
+\item{\code{metadata}}{}
 }}
 

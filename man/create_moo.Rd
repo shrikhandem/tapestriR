@@ -7,21 +7,17 @@
 create_moo(experiment_name, cell_annotations)
 }
 \arguments{
-\item{data}{data}
+\item{experiment_name}{Name of Experiment}
 
-\item{type}{assay type}
-
-\item{name}{sample name}
+\item{cell_annotations}{table of cell annotations. All in this object must match these cell annotations}
 }
 \value{
-Analyte Analyte object
+Tapestri_Multiomics Object (moo)
 }
 \description{
 Create Multiomics Object
 }
 \examples{
 \dontrun{
-genotypes <- extract_genotypes(loom, barcodes, gt.mask=TRUE)
-assay <- create_assay(genotypes, "snv", "sample")
 }
 }

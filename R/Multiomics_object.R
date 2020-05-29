@@ -103,7 +103,7 @@ setMethod(
 create_moo<- function(experiment_name, cell_annotations) {
   
   metadata = list(experiment_name = experiment_name)
-  moo@metadata[['cell_info']] = cell_annotations %>% group_by(sample) %>% summarise(cells=n())
+  metadata[['cell_info']] = cell_annotations %>% group_by(sample) %>% summarise(cells=n())
   moo <- methods::new(Class = 'Tapestri_Multiomics',
                         metadata = metadata,
                         cell_annotations = cell_annotations
