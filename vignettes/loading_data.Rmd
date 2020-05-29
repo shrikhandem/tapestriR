@@ -22,48 +22,25 @@ library(tidyverse)
 library(patchwork)
 
 
+#packages needed for analysis
+packages <- c("factoextra",  "NbClust", 'scran', 'uwot')
+
+for(i in 1:length(packages)) {
+  package = packages[i]
+  if (!requireNamespace(package, quietly = TRUE))
+    install.packages(package)
+
+  require(package=package, character.only=TRUE)
+}
+
+
+
 ASSAY_NAME_VARIANT = 'dna'
 ASSAY_NAME_READ_COUNT = 'cnv'
 ASSAY_NAME_PROTEIN = 'protein'
 
 
 
-```
-
-### Load data from Tapestri Insights Export
-
-Work for DNA only. Export can be from a multisample project in Tapestri Insights. 
-usage:
-
-1) extract exported zip file
-2) read the `NGT.csv` and `Variants.csv` files
-3) create new `Tapestri_Assay` object
-
-```{r}
-
-export_dir <- system.file("extdata", "insights_2.2_export", package = "TapestriR")
-
-#show files
-dir(export_dir)
-
-experiment_name = 'RAJI/K562 mixes'
-
-ngt = read_csv(paste0(export_dir,'/', 'NGT.csv'))
-
-cell_annotations = ngt %>% select(sample=Sample, barcode=Cell) %>% mutate(barcode = as.character(barcode))
-ngt_mat = ngt %>% select(-Sample, -Cell)
-variant_annotations = read_csv(paste0(export_dir,'/', 'Variants.csv')) 
-variant_annotations = variant_annotations %>% rename(id = Variant)
-
-variant_annotations = variant_annotations %>% arrange(match(id,colnames(ngt_mat)))
-
-variants_from_insights = create_assay(assay_name = 'variants', cell_annotations = cell_annotations, feature_annotations = variant_annotations)
-
-variants_from_insights = add_data_layer(assay = variants_from_insights, layer_name = 'NGT', data = ngt_mat)
-
-moo = create_moo(experiment_name = 'variants_from_insights', cell_annotations = variants_from_insights@cell_annotations)
-moo = add_assay(moo = moo, assay = variants_from_insights)
-moo_from_insights = moo
 ```
 
 
@@ -73,11 +50,7 @@ Work for DNA only. Only single sample, since loom files only contain 1 sample.
 
 ```{r load data, cache=TRUE}
 
-#filename <- system.file("extdata", "PE11.cells.loom", package = "TapestriR")
-
-#big file
-filename = '~/Google Drive/launches/r_package/data/AML27MBDX_190701121543.cells.loom'
-filename = '~/Google Drive/launches/r_package/data/BL2779506.cells.loom'
+filename <- system.file("extdata", "PE11.cells.loom", package = "TapestriR")
 
 variants = read_loom(filename,min_mutation_rate = 0.05)
 
@@ -86,6 +59,35 @@ vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
 vaf[is.na(vaf)] <- 0
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
+
+```
+
+#### Demension Reduction
+
+```{r}
+
+#dimensional reduction using umap
+set.seed(111)
+umap_values <- umap(filtered_variants$data_layers$VAF, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
+
+umap_layer = tibble(    
+      x = umap_values[,1],
+      y = umap_values[,2]
+)
+
+filtered_variants = add_analysis_layer(assay = filtered_variants, layer_name = 'umap_vaf',data = umap_layer)
+
+
+```
+
+#### Plot the data
+
+```{r}
+
+p = ggplot(filtered_variants@analysis_layers$umap_vaf)
+p = p + geom_point(aes(x = x, y = y), alpha = 0.5, size=0.8)
+p = p + theme_bw()
+p
 
 ```
 
@@ -135,3 +137,122 @@ moo = add_assay(moo,protein, keep_common_cells = TRUE)
 
 experiment = moo
 ```
+
+#### X-Y plots
+
+1) select which proteins to plot on X and Y axis
+2) select set of other feature(s) to color the plot by. If you choose more then one feature, each feature will be plotted in a subplot
+
+```{r fig.width = 12, fig.height = 8}
+
+
+##################
+# select the Proteins to plot on X and Y
+##################
+
+#protein_x = 'CD34'
+#protein_y = 'CD38'
+
+protein_x = 1
+protein_y = 2
+
+##################
+# select 1 or more features to color by
+# color_by should be a vector of column header you want to color by
+##################
+
+#all proteins
+color_by = experiment$assays$protein$data_layers$normalized
+
+#select a few proteins
+#color_by =  experiment$assays$protein$data_layers$normalized %>% select('CD110','CD117')
+
+#select a few variant
+#color_by =  experiment$assays$dna$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+
+
+p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[protein_x]], 
+                 y= experiment$assays$protein$data_layers$normalized[[protein_y]], 
+                 color_by = color_by)+ scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
+p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Protein Expression')
+p
+
+#select a few variant
+color_by =  experiment$assays$dna$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+
+
+p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[protein_x]], 
+                 y= experiment$assays$protein$data_layers$normalized[[protein_y]], 
+                 color_by = color_by)
+p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Genotypes')
+p
+
+```
+
+#### Demension Reduction
+
+```{r}
+
+### dimensional reduction using umap
+set.seed(111)
+umap_values <- umap(experiment$assays$dna$data_layers$VAF, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
+
+umap_layer = tibble(    
+      x = umap_values[,1],
+      y = umap_values[,2]
+)
+
+a = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'umap_vaf', umap_layer)
+
+experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'umap_vaf', umap_layer)
+
+```
+
+
+#### Plot the data
+
+```{r}
+
+p = ggplot(experiment$assays$dna$analysis_layers$umap_vaf)
+p = p + geom_point(aes(x = x, y = y), alpha = 0.5, size=0.8)
+p
+
+```
+
+
+### Load data from Tapestri Insights Export
+
+Work for DNA only. Export can be from a multisample project in Tapestri Insights. 
+usage:
+
+1) extract exported zip file
+2) read the `NGT.csv` and `Variants.csv` files
+3) create new `Tapestri_Assay` object
+
+```{r}
+
+export_dir <- system.file("extdata", "insights_2.2_export", package = "TapestriR")
+
+#show files
+dir(export_dir)
+
+experiment_name = 'RAJI/K562 mixes'
+
+ngt = read_csv(paste0(export_dir,'/', 'NGT.csv'))
+
+cell_annotations = ngt %>% select(sample=Sample, barcode=Cell) %>% mutate(barcode = as.character(barcode))
+ngt_mat = ngt %>% select(-Sample, -Cell)
+variant_annotations = read_csv(paste0(export_dir,'/', 'Variants.csv')) 
+variant_annotations = variant_annotations %>% mutate(id = Variant)
+
+variant_annotations = variant_annotations %>% arrange(match(id,colnames(ngt_mat)))
+
+variants_from_insights = create_assay(assay_name = 'variants', cell_annotations = cell_annotations, feature_annotations = variant_annotations)
+
+variants_from_insights = add_data_layer(assay = variants_from_insights, layer_name = 'NGT', data = ngt_mat)
+
+moo = create_moo(experiment_name = 'variants_from_insights', cell_annotations = variants_from_insights@cell_annotations)
+moo = add_assay(moo = moo, assay = variants_from_insights)
+moo_from_insights = moo
+```
+
