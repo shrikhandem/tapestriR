@@ -86,19 +86,19 @@ tapestri_violinplot <- function(clusters , features) {
   # make sure the x, y and color_by are in this new tibble
   ##################
   data_to_plot = tibble(
-    cluster = clusters,
+    clusters = clusters,
     features
   )
   
   ### Make into long format for plotting
   df_long = data_to_plot %>% 
-    pivot_longer(-c(cluster), 
+    pivot_longer(-c(clusters), 
                  names_to = 'feature',values_to = 'value') 
   
   
   ### plot
   p = ggplot(data=df_long)
-  p = p + geom_violin(aes(x=cluster, y=value, fill=cluster))
+  p = p + geom_violin(aes(x=cluster, y=value, fill=clusters))
   p = p + facet_wrap(~feature,nrow =1) + coord_flip()
   p = p + xlab('') + ylab('')
   
@@ -114,6 +114,7 @@ tapestri_violinplot <- function(clusters , features) {
 #'
 #' @return
 #' @export
+#' @import tidyverse
 #'
 recode_genotypes <- function(x,collapse_zygosity=TRUE) {
   if (collapse_zygosity) {
@@ -137,79 +138,48 @@ recode_genotypes <- function(x,collapse_zygosity=TRUE) {
 }
 
 
-#' Plot heatmap
+
+#' Title
 #'
-#' @param analytes multi assay object
-#' @param cluster cluster labels
-#' @param snv_features snv features
-#' @param prot_features prot features
-#' @param groupby group by gene/chr and select variant with highest mutation rate
-#' @return heatmap object
+#' @param normalized_reads 
+#' @param clusters 
+#'
+#' @return
 #' @export
-#' @examples
-#' \dontrun{
-#' p <- multiassay_heatmap(analytes, cluster, snv_features=c("DNMT3A", "JAK2"),
-#'    prot_features=c("CD3", "CD34"), groupby="gene")
-#' }
-multiassay_heatmap <- function(moo, cluster) {
-  clazz <- class(analytes)[1]
-  if (!(clazz %in% c("MultiAssay", "TapestriR"))) {
-    stop("Please specify multi assay object")
-  }
+#' @import tidyverse
+#' 
+tapestri_ploidy_plot <- function(normalized_reads, clusters) {
   
-  if (!is.null(groupby) && groupby != "gene") {
-    stop("Please provide valid groupby option.")
-  }
+  data_to_plot = tibble(
+    normalized_reads,
+    clusters = clusters
+  )
   
-  snv <- filter_slots_by_type(analytes, 'snv')
-  prot <- filter_slots_by_type(analytes, 'prot')
+  df_long = data_to_plot %>% 
+    pivot_longer(-c(contains('clusters')), 
+                 names_to = 'feature',values_to = 'value') %>% 
+    mutate(feature = as_factor(feature)) %>% group_by(feature) %>% mutate(median_count = median(value,na.rm = TRUE)) 
   
-  snv.h <- NULL
-  protein.h <- NULL
+  # group by clusters
+  p = ggplot(data=df_long, aes(x=feature, y=value))
   
-  if (!is.null(snv)) {
-    genotypes <- snv$data
-    
-    #genotype <- genotypes[, snv_features]
-    
-    genotypes.mat <- genotype_matrix(genotypes, groupby)
-    
-    #genotypes.mat <- genotypes.mat[order(match(rownames(genotypes.mat), snv@clones$Cell)), ]
-    
-    legend_params <- list(title = "Genotype", at = c(0, 1, 2, 3),
-                          border = "black", labels = c("WT", "HET", "HOM", "Missing"), 
-                          title_gp = grid::gpar(fontsize = 10, fontface = "bold"), 
-                          labels_gp = grid::gpar(fontsize = 7), legend_height = 5, legend_width = 5, 
-                          grid_height = grid::unit(5, "mm"), grid_width = grid::unit(5, "mm"))
-    col_fun <- c("grey", "red", "darkred", "white")
-    
-    if (!(is.null(snv_features))) {
-      if (is.null(groupby)) {
-        snv_features <- tapestri.cnv.loh.sort_by_loc(snv_features)
-      }
-      genotypes.mat <- genotypes.mat[, snv_features]
-    }
-    
-    snv.h <- ComplexHeatmap::Heatmap(as.matrix(genotypes.mat), name = "GT",
-                                     column_order = colnames(genotypes.mat), split=factor(cluster),
-                                     show_row_names=FALSE, row_title_gp = grid::gpar(fontsize = 6),
-                                     col=col_fun, heatmap_legend_param=legend_params,
-                                     column_names_gp = grid::gpar(fontsize=8),
-                                     show_column_dend=FALSE)
-  }
+  p  = p + geom_dotplot(aes(fill = clusters),   # Use fill = Species here not in ggplot()
+                        binaxis = "y",         # which axis to bin along
+                        binwidth = 0.1,        # Minimal difference considered different
+                        stackdir = "center",    # Centered
+                        alpha=.04
+  )
   
-  if (!is.null(prot)) {
-    protein <- prot$data
-    if (!is.null(prot_features)) {
-      protein <- protein[, prot_features]
-    }
-    
-    protein.h <- ComplexHeatmap::Heatmap(as.matrix(protein), name = "Normalized Protein Counts", 
-                                         split=factor(cluster), show_row_names=FALSE,  row_title_gp = grid::gpar(fontsize = 5), 
-                                         column_names_gp = grid::gpar(fontsize=8))
-  }
+  p  = p + stat_summary(fun = median, geom = "crossbar", width = 0.8) + facet_wrap(~clusters, ncol=1) + 
+    ylim(c(0,ceiling(max(df_long$median_count))+1))
+  p = p + geom_hline(aes(yintercept=2), color="red", size=1, alpha=.5)
+  p = p + xlab('') + ylab('')
+  p = p + theme_bw()  + theme(legend.position = "none",
+                              axis.text.x = element_text(angle = 90, hjust = 1))
   
-  return(protein.h + snv.h)
+  return(p)  
+  
 }
+
 
 

@@ -25,13 +25,19 @@ Tapestri_Multiomics <- setClass(
 
 
 #' @export
+#' @import methods
 #' @method dim Tapestri_Multiomics
 #'
 dim.Tapestri_Multiomics <- function(x) {
   c(nrow(x@cell_annotations))
 }
 
+#' get names of object
+#' 
+#' @param x 
+#'
 #' @export
+#' @import methods
 #' @method names Tapestri_Multiomics
 #'
 names.Tapestri_Multiomics <- function(x) {
@@ -41,20 +47,23 @@ names.Tapestri_Multiomics <- function(x) {
 #
 #' @export
 #'
-#' @import utils
+#' @import utils 
+#' @import methods
 .DollarNames.Tapestri_Multiomics <- function(x, pattern = "") {
   grep(pattern, slotNames(x), value=TRUE)
 }
 
 #
 #' @export
-#'
+#' @import methods
+#' 
 "$.Tapestri_Multiomics" <- function(x, i, ...) {
   return(slot(object = x, name = i))
 }
 
 #' @export
 #'
+#' @import methods
 "$<-.Tapestri_Multiomics" <- function(x, i, ..., value) {
   slot(object = x, name = i) = value
   return(x)
@@ -63,7 +72,8 @@ names.Tapestri_Multiomics <- function(x) {
 
 #' @export
 #' @method [[ Tapestri_Multiomics
-#'
+#' @import methods
+#' 
 "[[.Tapestri_Multiomics" <- function(x, i, ..., drop = FALSE) {
   if (missing(x = i)) {
     i <- 'name'
@@ -74,7 +84,8 @@ names.Tapestri_Multiomics <- function(x) {
 
 #' @export
 #' @method [[<- Tapestri_Multiomics
-#'
+#' @import methods
+#' 
 "[[<-.Tapestri_Multiomics" <- function(x, i, ..., value) {
   slot(object = x, name = i) = value
   return(x)
@@ -102,9 +113,6 @@ setMethod(
 #' @return Tapestri_Multiomics Object (moo)
 #' @importFrom methods new
 #' @export
-#' @examples
-#' \dontrun{
-#' }
 create_moo<- function(experiment_name, cell_annotations) {
   
   metadata = list(experiment_name = experiment_name)
@@ -126,7 +134,6 @@ create_moo<- function(experiment_name, cell_annotations) {
 #' @return
 #' @export
 #'
-#' @examples
 add_assay <- function(moo, assay, keep_common_cells=FALSE) {
   
   #moo = experiment 

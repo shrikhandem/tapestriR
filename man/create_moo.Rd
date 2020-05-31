@@ -17,7 +17,3 @@ Tapestri_Multiomics Object (moo)
 \description{
 Create Multiomics Object
 }
-\examples{
-\dontrun{
-}
-}

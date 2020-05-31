@@ -48,7 +48,7 @@ ASSAY_NAME_PROTEIN = 'protein'
 
 Work for DNA only. Only single sample, since loom files only contain 1 sample.  
 
-```{r load data, cache=TRUE}
+```{r load_loom, cache=TRUE}
 
 filename <- system.file("extdata", "PE11.cells.loom", package = "TapestriR")
 
@@ -104,7 +104,7 @@ usage:
 4) create a multiomics object and merge all 3 assays. This will make sure each assay has the same cells. 
 
 
-```{r load_data}
+```{r load_h5}
 
 
 filename <- system.file("extdata", "ABseq021.h5", package = "TapestriR")
@@ -128,6 +128,8 @@ protein = add_data_layer(protein,'normalized',protein_counts_norm)
 
 ### load cnv assay 
 cnv = read_h5(filename,assay_name = ASSAY_NAME_READ_COUNT)
+normalized_dna_reads = normalize_dna_reads(cnv$data_layers$read_counts)
+cnv = add_data_layer(cnv,'normalized',normalized_dna_reads)
 
 ### create multiomics object (moo)
 moo = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
@@ -243,7 +245,8 @@ ngt = read_csv(paste0(export_dir,'/', 'NGT.csv'))
 cell_annotations = ngt %>% select(sample=Sample, barcode=Cell) %>% mutate(barcode = as.character(barcode))
 ngt_mat = ngt %>% select(-Sample, -Cell)
 variant_annotations = read_csv(paste0(export_dir,'/', 'Variants.csv')) 
-variant_annotations = variant_annotations %>% mutate(id = Variant)
+
+variant_annotations = bind_cols(variant_annotations, annotate_variants(variant_annotations$Variant))
 
 variant_annotations = variant_annotations %>% arrange(match(id,colnames(ngt_mat)))
 
