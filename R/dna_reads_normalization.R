@@ -1,7 +1,7 @@
 
 #' Normalize barcode data
 #'
-#' @param reads 
+#' @param reads matrix of read counts per amplicon per cell
 #' @param advanced advance normalization (dividing read counts by cell median before applying normalization by total sum)
 #'
 #' @return normalized_barcodes - normalized barcode data

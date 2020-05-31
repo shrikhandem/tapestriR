@@ -1,0 +1,605 @@
+---
+title: "Multi-omics Analysis"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+editor_options: 
+  
+  chunk_output_type: console
+vignette: >
+  %\VignetteIndexEntry{Multi-omics Analysis}
+  \usepackage[utf8]{inputenc}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+
+```{r load_libraries, include=FALSE}
+
+library(TapestriR)
+library(tidyverse)
+theme_set(theme_bw())
+library(plotly)
+library(patchwork)
+
+# protein normalization library
+#library(SciViews)
+
+packages <- c("factoextra",  "NbClust", 'scran', 'uwot','glmpca', 'ComplexHeatmap')
+
+for(i in 1:length(packages)) {
+  package = packages[i]
+  if (!requireNamespace(package, quietly = TRUE))
+    install.packages(package)
+
+  require(package=package, character.only=TRUE)
+}
+
+ASSAY_NAME_VARIANT = 'dna'
+ASSAY_NAME_READ_COUNT = 'cnv'
+ASSAY_NAME_PROTEIN = 'protein'
+
+
+```
+
+### Load data
+
+1) Load variant assay and filter 
+2) Load Protein assay and normalize
+3) Load DNA read counts
+4) create a multiomics object and merge all 3 assays. This will make sure each assay has the same cells. 
+
+
+```{r load_data}
+
+
+filename <- system.file("extdata", "ABseq021.h5", package = "TapestriR")
+
+# ideally would just start by loading filtered H5, but for now will send filtering list to function to mimic
+variants = read_h5(filename = filename, assay_name = ASSAY_NAME_VARIANT, min_mutation_rate = 0.005)
+
+filtered_variants = filter_variants(variants)
+
+vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
+vaf[is.na(vaf)] <- 0
+
+filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
+
+### load protein assay and normalize
+protein = read_h5(filename = filename, assay_name = ASSAY_NAME_PROTEIN)
+# normalize using clr method
+protein_counts_norm = protein@data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
+# add normalized data to protein assay
+protein = add_data_layer(protein,'normalized',protein_counts_norm)
+
+### load cnv assay 
+cnv = read_h5(filename,assay_name = ASSAY_NAME_READ_COUNT)
+normalized_dna_reads = normalize_dna_reads(cnv$data_layers$read_counts)
+cnv = add_data_layer(cnv,'normalized',normalized_dna_reads)
+
+### create multiomics object (moo)
+experiment = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
+experiment = add_assay(experiment,filtered_variants)
+
+experiment = add_assay(experiment,cnv,keep_common_cells = TRUE)
+
+experiment = add_assay(experiment,protein, keep_common_cells = TRUE)
+
+```
+
+### X-Y plots
+
+1) select which proteins to plot on X and Y axis
+2) select set of other feature(s) to color the plot by. If you choose more then one feature, each feature will be plotted in a subplot
+
+```{r fig.width = 12, fig.height = 8}
+
+
+##################
+# select the Proteins to plot on X and Y
+##################
+
+#protein_x = 'CD34'
+#protein_y = 'CD38'
+
+protein_x = 1
+protein_y = 2
+
+##################
+# select 1 or more features to color by
+# color_by should be a vector of column header you want to color by
+##################
+
+#all proteins
+color_by = experiment$assays$protein$data_layers$normalized
+
+#select a few proteins
+#color_by =  experiment$assays$protein$data_layers$normalized %>% select('CD110','CD117')
+
+#select a few variant
+#color_by =  experiment$assays$dna$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+
+
+p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[protein_x]], 
+                 y= experiment$assays$protein$data_layers$normalized[[protein_y]], 
+                 color_by = color_by)+ scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
+p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Protein Expression')
+p
+
+#select a few variant
+color_by =  experiment$assays$dna$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+
+
+p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[protein_x]], 
+                 y= experiment$assays$protein$data_layers$normalized[[protein_y]], 
+                 color_by = color_by)
+p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Genotypes')
+p
+
+```
+
+## Different projections
+
+Testing out different projections. When to use which is open question. 
+
+```{r projections, message=FALSE, warning=FALSE}
+
+data = experiment$assays$dna$data_layers$VAF
+L<-2 #number of latent dimensions
+
+projections = list()
+
+res1<-glmpca(data,L,fam="poi",verbose=TRUE)
+projections[['Projection:glm_poi DR:glm_poi data:vaf']] = tibble(x = res1$loadings[,1], y = res1$loadings[,2])
+res2<-glmpca(data,L,fam="nb",verbose=TRUE)
+projections[['Projection:glm_nb DR:glm_nb data:vaf']] = tibble(x = res2$loadings[,1], y = res2$loadings[,2])
+res3<-prcomp(data,center=TRUE,scale.=TRUE,rank.=L)
+projections[['Projection:pca DR:pca data:vaf']] = tibble(x = res3$x[,1], y = res3$x[,2])
+
+umap_values <- umap(data, scale=TRUE, metric="euclidean", init="laplacian", pca=20) 
+projections[['Projection:umap_euclidean DR:pca data:vaf']] = tibble(x = umap_values[,1], y = umap_values[,2])
+
+umap_values <- umap(data, scale=TRUE, metric="cosine", init="laplacian", pca=20) 
+projections[['Projection:umap_cosine DR:pca data:vaf']] = tibble(x = umap_values[,1], y = umap_values[,2])
+
+### dimensional reduction using umap
+set.seed(111)
+umap_values <- umap(data, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
+projections[['Projection:umap_manhattan DR:pca data:vaf']] = tibble(x = umap_values[,1], y = umap_values[,2])
+
+
+# umap_glm_poi <- umap(res1$loadings, scale=TRUE, metric="euclidean", init="laplacian", pca=20) 
+# projections[['Projection:umap_euclidean DR:glm_poi data:vaf']] = tibble(x = umap_glm_poi[,1], y = umap_glm_poi[,2])
+# 
+# umap_glm_poi <- umap(res2$loadings, scale=TRUE, metric="euclidean", init="laplacian", pca=20) 
+# projections[['Projection:umap_euclidean DR:glm_nb data:vaf']] = tibble(x = umap_glm_poi[,1], y = umap_glm_poi[,2])
+
+
+experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'projections', as_tibble(projections))
+
+
+```
+
+
+
+### Figure out how many clusters?
+
+This is not a trival problem. Its left to user to explore the data. Here are a few examples on determining the number of clusters in your data. 
+
+```{r num_clusters, warning=FALSE, cache=TRUE}
+
+cluster_on = experiment$assays$dna$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
+
+# Elbow method
+elbow = fviz_nbclust(cluster_on, kmeans, method = "wss") +
+  labs(subtitle = "Elbow method")
+
+# Silhouette method
+silhouette = fviz_nbclust(cluster_on, kmeans, method = "silhouette")+
+  labs(subtitle = "Silhouette method")
+
+# Gap statistic
+# nboot = 50 to keep the function speedy. 
+# recommended value: nboot= 500 for your analysis.
+# Use verbose = FALSE to hide computing progression.
+# set.seed(123)
+# gap_stat = fviz_nbclust(cluster_on, kmeans, nstart = 25,  method = "gap_stat", nboot = 25)+
+#   labs(subtitle = "Gap statistic method")
+
+
+(elbow + silhouette) #/ 
+  #(gap_stat + plot_spacer())
+
+```
+
+
+### Cluster SNV
+
+clustering by kmeans and louvain on umap projection and raw features
+
+```{r cluster snv, cache=TRUE}
+
+
+
+### Hold all the different customer labels in a single structure
+
+cluster_by = experiment$assays$dna$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
+clusters = list()
+
+#### do the clustering
+
+for(i in 2:5) {
+  kmean_values <- kmeans(cluster_by, i ,iter.max=500)
+  clusters[[paste0('umap.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
+
+  kmean_values <- kmeans(cluster_by, i ,iter.max=500)
+  clusters[[paste0('feature.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
+
+}
+
+graph_values <- buildSNNGraph(t(cluster_by), k=150)
+louvain_clust <- igraph::cluster_louvain(graph_values)$membership
+
+clusters[['umap.louvain.cluster']] = as_factor(louvain_clust)
+
+graph_values <- buildSNNGraph(t(cluster_by), k=150)
+louvain_clust <- igraph::cluster_louvain(graph_values)$membership
+
+clusters[['features.louvain.cluster']] = as_factor(louvain_clust)
+
+
+#############
+## Add cluster labels to analysis data structure
+#############
+experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'umap_vaf_clusters', as_tibble(clusters))
+
+
+```
+
+## Plot all the different projections
+
+can you tell which method is best from plotting? 
+
+```{r fig.width = 12, fig.height = 8}
+color_by = experiment$assays$dna$analysis_layers$umap_vaf_clusters %>% select(features.louvain.cluster,feature.kmean.cluster.4)
+plots = list()
+for(projection in names(experiment$assays$dna$analysis_layers$projections)) {
+  plots[[projection]] = tapestri_scatterplot(
+                 x = experiment$assays$dna$analysis_layers$projections[[projection]]$x, 
+                 y= experiment$assays$dna$analysis_layers$projections[[projection]]$y, 
+                 color_by = color_by) + umap_theme() + ggtitle(projection)
+}
+wrap_plots(plots)
+
+
+```
+
+#### plot UMAP and Clusters
+
+plot all the different clusters on the same umap projection.
+change the x and y to use different projections
+
+```{r fig.width = 12, fig.height = 8}
+
+p  = tapestri_scatterplot(
+                 x = experiment$assays$dna$analysis_layers$projections$`Projection:glm_poi DR:glm_poi data:vaf`$x, 
+                 y= experiment$assays$dna$analysis_layers$projections$`Projection:glm_poi DR:glm_poi data:vaf`$y, 
+                 color_by = experiment$assays$dna$analysis_layers$umap_vaf_clusters)
+p = p + umap_theme() + ggtitle('umap_vaf_clusters')
+p
+
+```
+
+#### color UMAP by genotypes
+
+
+```{r fig.width = 12, fig.height = 8}
+ 
+ #%>% select(!contains('chr2:198267'))
+
+color_by = experiment$assays$dna$data_layers$NGT %>% select(1:20) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+projection = experiment$assays$dna$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
+
+p  = tapestri_scatterplot(
+                 x = projection$x, 
+                 y= projection$y, 
+                 color_by = color_by)
+p = p + umap_theme() 
+p = p + ggtitle('Color by Genotypes')
+p
+
+
+```
+
+
+#### violin plots
+
+to do:
+
+* name the clusters based on signature
+* show heatmap of signature 
+
+```{r fig.width = 12, fig.height = 8}
+
+
+color_by = experiment$assays$dna$analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
+projection = experiment$assays$dna$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
+
+p  = tapestri_scatterplot(
+                 x = projection$x, 
+                 y= projection$y, 
+                 color_by = color_by)
+p = p + umap_theme() + ggtitle('umap_vaf_clusters') + theme(legend.position = 'none')
+
+
+v = tapestri_violinplot(clusters = color_by,
+               features = experiment$assays$protein$data_layers$normalized)
+v = v + theme_bw() + theme(legend.position = "none",
+                            axis.text.x = element_text(angle = 90, hjust = 1))
+  
+## pathwork magic
+p / v
+
+
+```
+
+
+#### Color UMAP by Proteins
+
+```{r fig.width = 12, fig.height = 8}
+
+color_by = experiment$assays$protein$data_layers$normalized
+projection = experiment$assays$dna$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
+
+
+p  = tapestri_scatterplot(
+                 x = projection$x, 
+                 y= projection$y, 
+                 color_by = color_by)
+p = p + umap_theme() + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
+p = p + ggtitle('Color by Proteins')
+p
+
+```
+
+
+
+### Cluster by Proteins 
+
+clustering by kmeans and louvain on umap projection and raw features
+
+```{r cache=TRUE}
+
+
+#dimensional reduction using umap
+set.seed(111)
+umap_values <- umap(experiment$assays$protein$data_layers$normalized, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
+
+umap_layer = tibble(    
+      x = umap_values[,1],
+      y = umap_values[,2]
+)
+
+experiment$assays$protein = add_analysis_layer(assay = experiment$assays$protein, layer_name = 'umap', umap_layer)
+  
+######
+# Hold all the different customer labels in a single structure
+#####
+cluster_by = experiment$assays$protein$analysis_layers$umap
+clusters = list()
+
+#### do the clustering
+
+for(i in 2:5) {
+  kmean_values <- kmeans(cluster_by, i ,iter.max=500)
+  clusters[[paste0('umap.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
+
+  kmean_values <- kmeans(cluster_by, i ,iter.max=500)
+  clusters[[paste0('feature.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
+
+}
+
+graph_values <- buildSNNGraph(t(cluster_by), k=150)
+louvain_clust <- igraph::cluster_louvain(graph_values)$membership
+
+clusters[['umap.louvain.cluster']] = as_factor(louvain_clust)
+
+graph_values <- buildSNNGraph(t(cluster_by), k=150)
+louvain_clust <- igraph::cluster_louvain(graph_values)$membership
+
+clusters[['features.louvain.cluster']] = as_factor(louvain_clust)
+
+
+#############
+## Add cluster labels to analysis data structure
+#############
+experiment$assays$protein = add_analysis_layer(assay = experiment$assays$protein, layer_name = 'clusters', as_tibble(clusters))
+
+
+```
+
+#### plot UMAP and Clusters
+
+plot all the different clusters on the same umap projection
+
+```{r fig.width = 12, fig.height = 8}
+
+
+p  = tapestri_scatterplot(
+                 x = experiment$assays$protein$analysis_layers$umap$x, 
+                 y= experiment$assays$protein$analysis_layers$umap$y, 
+                 color_by = experiment$assays$protein$analysis_layers$clusters)
+
+p = p + xlab('') + ylab('')
+p = p + umap_theme() 
+p
+
+```
+
+
+#### violin plots
+
+to do:
+
+* name the clusters based on signature
+* show heatmap of signature 
+
+```{r fig.width = 12, fig.height = 8}
+
+p_umap  = tapestri_scatterplot(
+                 x = experiment$assays$protein$analysis_layers$umap$x, 
+                 y= experiment$assays$protein$analysis_layers$umap$y, 
+                 color_by = experiment$assays$protein$analysis_layers$clusters$features.louvain.cluster) + 
+  xlab('') + ylab('') + umap_theme() 
+
+p_violin = tapestri_violinplot(
+           clusters = experiment$assays$protein$analysis_layers$clusters$features.louvain.cluster,
+           features = experiment$assays$protein$data_layers$normalized)
+
+p_umap / p_violin
+
+```
+
+
+#### Color UMAP by features
+
+```{r fig.width = 12, fig.height = 8}
+
+p  = tapestri_scatterplot(
+                 x = experiment$assays$protein$analysis_layers$umap$x, 
+                 y= experiment$assays$protein$analysis_layers$umap$y, 
+                 color_by = experiment$assays$protein$data_layers$normalized)
+p = p + umap_theme() + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
+p
+
+```
+
+
+### CNV
+
+Usage: 
+
+1) select a cluster that you think is normal population.
+2) normalize read counts based on this normal population.
+3) plot as heatmap to review
+
+```{r}
+
+#pick a clustering methods that best represents your data and identify the normal cluster
+# normalize all the read counts based on the normal cluster
+cnv.mat = compute_ploidy(
+  reads = experiment$assays$cnv$data_layers$normalized,
+  clusters = experiment$assays$dna$analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4,
+  baseline_cluster = 1
+ )
+
+experiment$assays$cnv <- add_analysis_layer(assay = experiment$assays$cnv,layer_name = 'norm_to_baseline',data = cnv.mat)
+
+cnv.mat = as.matrix(experiment$assays$cnv$analysis_layers$norm_to_baseline)
+cnv.mat[is.na(cnv.mat) | is.infinite(cnv.mat)] <-2
+
+clusters = experiment$assays$dna@analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
+
+cnv.h <- ComplexHeatmap::Heatmap(
+   as.matrix(cnv.mat), 
+   name = "CNV",
+   col = circlize::colorRamp2(c(0, 2, 4), c("yellow", "grey", "blue")), 
+   split=factor(clusters),
+   
+   cluster_rows = FALSE,  
+   show_row_names=FALSE, 
+   cluster_columns = FALSE,  
+   row_title_gp = grid::gpar(fontsize = 6), 
+   column_names_gp = grid::gpar(fontsize=8),
+   show_column_dend=FALSE)
+cnv.h
+```
+
+#### Plot the same data as a line plot
+
+```{r}
+
+p = tapestri_ploidy_plot(
+  normalized_reads = experiment$assays$cnv$analysis_layers$norm_to_baseline,
+  clusters = experiment$assays$dna$analysis_layers$umap_vaf_clusters$feature.kmean.cluster.4
+  )
+p
+```
+
+
+### Single assay or multiomic heatmap
+
+To do
+
+* clean up how we do coloring
+* provide a way to sort within each cluster
+* what to do with multisample
+* remove features that are not informative
+* label analytes
+
+Users should become familiar with ComplexHeatmap::Heatmap https://jokergoo.github.io/ComplexHeatmap-reference/book/ 
+We're only providing a simple example to get started.
+
+```{r}
+variant_order = experiment$assays$dna$feature_annotations %>%
+  mutate(CHROM = as.numeric(CHROM), POS = as.numeric(POS)) %>%
+  arrange(CHROM, POS)
+
+#order features in chr order
+genotypes.mat = experiment$assays$dna@data_layers$NGT %>% select(variant_order$id)
+protein.mat = experiment$assays$protein$data_layers$normalized
+
+clusters = experiment$assays$dna@analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
+
+
+snv.h <- ComplexHeatmap::Heatmap(
+  as.matrix(genotypes.mat),
+  name = "GT",
+  col = c("lightgrey", "yellow", "blue", "black"),
+  #circlize::colorRamp2(c(0, 1, 2, 3), c("grey", "yellow", "blue", "black"))
+  
+  heatmap_legend_param = list(labels = c("WT", "HET", "HOM", "Missing")),
+  
+  split = factor(clusters),
+  
+  cluster_rows = FALSE,
+  show_row_names = FALSE,
+  cluster_columns = FALSE,
+  row_title_gp = grid::gpar(fontsize = 6),
+  column_names_gp = grid::gpar(fontsize = 8),
+  show_column_dend = FALSE
+)
+
+snv.h
+
+protein.h <- ComplexHeatmap::Heatmap(
+  as.matrix(protein.mat),
+  name = "Protein",
+  cluster_rows = FALSE,
+  cluster_columns = FALSE,
+  
+  col = circlize::colorRamp2(c(-2, 0, 2), c("yellow", "grey", "blue")),
+  
+  split = factor(clusters),
+  show_row_names = FALSE,
+  row_title_gp = grid::gpar(fontsize = 6),
+  #heatmap_legend_param=legend_params,
+  column_names_gp = grid::gpar(fontsize = 8),
+  show_column_dend = FALSE
+)
+
+protein.h
+```
+
+##### Plot all the data togather 
+```{r  fig.width = 12, fig.height = 8}
+
+
+snv.h + cnv.h + protein.h
+
+
+```
+
+
+
+

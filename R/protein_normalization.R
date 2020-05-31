@@ -17,7 +17,6 @@ log_colMeans <- function(x){
 
 #' Log normalization by cell
 #'
-#' @param ... 
 #' @param counts counts data
 #'
 #' @return normalized counts
@@ -35,7 +34,6 @@ log_norm_by_cell <- function(counts) {
 
 #' Log normalization by feature
 #'
-#' @param ... 
 #' @param counts counts data
 #'
 #' @return normalized counts
@@ -60,7 +58,6 @@ log_norm_by_feature <- function(counts) {
 
 #' CLR normalization by cell
 #'
-#' @param ... 
 #' @param counts counts data
 #'
 #' @return normalized counts
@@ -80,7 +77,6 @@ clr_by_cell <- function(counts) {
 
 #' CLR normalization by feature
 #'
-#' @param ... 
 #' @param counts counts data
 #'
 #' @return normalized counts

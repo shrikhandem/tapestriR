@@ -34,7 +34,7 @@ dim.Tapestri_Multiomics <- function(x) {
 
 #' get names of object
 #' 
-#' @param x 
+#' @param x Tapestri_Multiomics object
 #'
 #' @export
 #' @import methods

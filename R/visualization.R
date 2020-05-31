@@ -98,7 +98,7 @@ tapestri_violinplot <- function(clusters , features) {
   
   ### plot
   p = ggplot(data=df_long)
-  p = p + geom_violin(aes(x=cluster, y=value, fill=clusters))
+  p = p + geom_violin(aes(x=clusters, y=value, fill=clusters))
   p = p + facet_wrap(~feature,nrow =1) + coord_flip()
   p = p + xlab('') + ylab('')
   
@@ -141,8 +141,8 @@ recode_genotypes <- function(x,collapse_zygosity=TRUE) {
 
 #' Title
 #'
-#' @param normalized_reads 
-#' @param clusters 
+#' @param normalized_reads read counts per amplicon per cell
+#' @param clusters cluster labels 
 #'
 #' @return
 #' @export
