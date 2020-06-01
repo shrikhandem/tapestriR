@@ -15,6 +15,7 @@
 #' @export
 filter_variants <- function(variant_assay, gqc = 30, dpc = 10, afc = 20, mv = 50, mc = 50, mm = 1, gt.mask = FALSE) {
   
+  warning('this method will not return identical results to Tapestri Insights. Export filtered results from Tapestri Insights or use the Tapestri SDK to filter before importing into R.')
   # variant_assay = variants
   # gqc = 30
   # dpc = 10
@@ -61,8 +62,8 @@ filter_variants <- function(variant_assay, gqc = 30, dpc = 10, afc = 20, mv = 50
   mv.f <- (mv.c < mv)
   mm.f <- (mm.c < mm)
   mv.f[!mv.f] <- mm.f
-  
   kept_variants <- base::which(!mv.f)
+  
   if (!(length(kept_variants) & length(kept_cells))) {
     stop("All cells/variants are filtered. Try different filtering settings.")
   }
@@ -71,18 +72,11 @@ filter_variants <- function(variant_assay, gqc = 30, dpc = 10, afc = 20, mv = 50
   if (gt.mask == TRUE) {
     variant_assay@data_layers$NGT[!ngt_filter] <- 3
   }
-  
-  filtered_variant_assay = create_assay(assay_name = ASSAY_NAME_VARIANT, 
-                                        cell_annotations = variant_assay@cell_annotations[kept_cells,],
-                                        feature_annotations = variant_assay@feature_annotations[kept_variants,]
-                                      )
-  
-  #filter variants from all layers in variants assay
-  for(layer in names(variant_assay@data_layers)){
-    filtered_variant_assay = add_data_layer(filtered_variant_assay,
-                                            layer_name = layer, 
-                                            data = variant_assay@data_layers[[layer]][kept_cells,kept_variants])
-  }
+  filtered_variant_assay = subset_assay(
+    assay = variant_assay,
+    keep_cell_ids = variant_assay$cell_annotations$id[kept_cells],
+    keep_feature_ids = variant_assay$feature_annotations$id[kept_variants]
+  )
   
   return(filtered_variant_assay)
 }

@@ -7,7 +7,7 @@
 normalize_dna_reads(reads, advanced = FALSE)
 }
 \arguments{
-\item{reads}{}
+\item{reads}{matrix of read counts per amplicon per cell}
 
 \item{advanced}{advance normalization (dividing read counts by cell median before applying normalization by total sum)}
 }
@@ -16,9 +16,4 @@ normalized_barcodes - normalized barcode data
 }
 \description{
 Normalize barcode data
-}
-\examples{
-\dontrun{
-normalized_barcodes <- normalize_barcodes(barcodes)
-}
 }

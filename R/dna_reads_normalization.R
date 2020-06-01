@@ -6,10 +6,6 @@
 #'
 #' @return normalized_barcodes - normalized barcode data
 #' @export
-#' @examples
-#' \dontrun{
-#' normalized_barcodes <- normalize_barcodes(barcodes)
-#' }
 normalize_dna_reads <- function(reads, advanced = FALSE) {
   
   normalized_barcodes <- reads
@@ -48,7 +44,7 @@ normalize_dna_reads <- function(reads, advanced = FALSE) {
 #' @param bcfile.norm Normalised barcode distribution
 #' @param baseline_cluster_cells vector of TRUE/FALSE of size number of cells baseline normal cluster cells
 #'
-#' @return normalized read counts centered around ploidy 2
+#' @return normalized read counts centered around ploidy 2. amplicons with low read counts are removed
 #' @export
 #'
 compute_ploidy <- function(reads, clusters, baseline_cluster) {

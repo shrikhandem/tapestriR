@@ -52,7 +52,7 @@ Work for DNA only. Only single sample, since loom files only contain 1 sample.
 
 filename <- system.file("extdata", "PE11.cells.loom", package = "TapestriR")
 
-variants = read_loom(filename,min_mutation_rate = 0.05)
+variants = read_loom(filename,min_mutation_rate = 0.005)
 
 filtered_variants = filter_variants(variants)
 vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
@@ -110,17 +110,17 @@ usage:
 filename <- system.file("extdata", "ABseq021.h5", package = "TapestriR")
 
 # ideally would just start by loading filtered H5, but for now will send filtering list to function to mimic
-variants = read_h5(filename = filename, assay_name = ASSAY_NAME_VARIANT, min_mutation_rate = 0.05)
+variants = read_h5(filename = filename, assay_name = ASSAY_NAME_VARIANT, min_mutation_rate = 0.005)
 
 filtered_variants = filter_variants(variants)
 
 vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
 vaf[is.na(vaf)] <- 0
-
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
 ### load protein assay and normalize
 protein = read_h5(filename = filename, assay_name = ASSAY_NAME_PROTEIN)
+
 # normalize using clr method
 protein_counts_norm = protein@data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
 # add normalized data to protein assay
@@ -237,25 +237,8 @@ export_dir <- system.file("extdata", "insights_2.2_export", package = "TapestriR
 
 #show files
 dir(export_dir)
+variants = read_insights_export(export_dir = export_dir)
 
-experiment_name = 'RAJI/K562 mixes'
 
-ngt = read_csv(paste0(export_dir,'/', 'NGT.csv'))
-
-cell_annotations = ngt %>% select(sample=Sample, barcode=Cell) %>% mutate(barcode = as.character(barcode))
-ngt_mat = ngt %>% select(-Sample, -Cell)
-variant_annotations = read_csv(paste0(export_dir,'/', 'Variants.csv')) 
-
-variant_annotations = bind_cols(variant_annotations, annotate_variants(variant_annotations$Variant))
-
-variant_annotations = variant_annotations %>% arrange(match(id,colnames(ngt_mat)))
-
-variants_from_insights = create_assay(assay_name = 'variants', cell_annotations = cell_annotations, feature_annotations = variant_annotations)
-
-variants_from_insights = add_data_layer(assay = variants_from_insights, layer_name = 'NGT', data = ngt_mat)
-
-moo = create_moo(experiment_name = 'variants_from_insights', cell_annotations = variants_from_insights@cell_annotations)
-moo = add_assay(moo = moo, assay = variants_from_insights)
-moo_from_insights = moo
 ```
 

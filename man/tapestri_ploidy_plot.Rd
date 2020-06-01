@@ -7,9 +7,9 @@
 tapestri_ploidy_plot(normalized_reads, clusters)
 }
 \arguments{
-\item{normalized_reads}{}
+\item{normalized_reads}{read counts per amplicon per cell}
 
-\item{clusters}{}
+\item{clusters}{cluster labels}
 }
 \value{
 

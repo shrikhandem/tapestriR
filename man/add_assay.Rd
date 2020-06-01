@@ -11,7 +11,7 @@ add_assay(moo, assay, keep_common_cells = FALSE)
 
 \item{assay}{new Assay object to add}
 
-\item{keep_common_cells}{default FALSE. Will throw error if number of cells and cell barcodes dont match. If TRUE merge assays and only keep intersect of cells from all assays.}
+\item{keep_common_cells}{default FALSE. Will throw error if number of cells and cell ids dont match. If TRUE merge assays and only keep intersect of cells from all assays.}
 }
 \value{
 

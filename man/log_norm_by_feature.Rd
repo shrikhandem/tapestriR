@@ -8,8 +8,6 @@ log_norm_by_feature(counts)
 }
 \arguments{
 \item{counts}{counts data}
-
-\item{...}{}
 }
 \value{
 normalized counts

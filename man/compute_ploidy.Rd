@@ -12,7 +12,7 @@ compute_ploidy(reads, clusters, baseline_cluster)
 \item{baseline_cluster_cells}{vector of TRUE/FALSE of size number of cells baseline normal cluster cells}
 }
 \value{
-normalized read counts centered around ploidy 2
+normalized read counts centered around ploidy 2. amplicons with low read counts are removed
 }
 \description{
 Identify ploidy for samples

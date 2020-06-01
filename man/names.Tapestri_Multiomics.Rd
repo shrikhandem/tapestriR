@@ -7,7 +7,7 @@
 \method{names}{Tapestri_Multiomics}(x)
 }
 \arguments{
-\item{x}{}
+\item{x}{Tapestri_Multiomics object}
 }
 \description{
 get names of object

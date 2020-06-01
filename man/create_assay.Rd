@@ -19,9 +19,3 @@ Tapestri_Assay object
 \description{
 Create Tapestri_Assay Object
 }
-\examples{
-\dontrun{
-genotypes <- extract_genotypes(loom, barcodes, gt.mask=TRUE)
-assay <- create_assay(genotypes, "snv", "sample")
-}
-}

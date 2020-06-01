@@ -62,7 +62,6 @@ filtered_variants = filter_variants(variants)
 
 vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
 vaf[is.na(vaf)] <- 0
-
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
 ### load protein assay and normalize
@@ -79,7 +78,7 @@ cnv = add_data_layer(cnv,'normalized',normalized_dna_reads)
 
 ### create multiomics object (moo)
 experiment = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
-experiment = add_assay(experiment,filtered_variants)
+experiment = add_assay(moo = experiment,assay = filtered_variants)
 
 experiment = add_assay(experiment,cnv,keep_common_cells = TRUE)
 
@@ -142,19 +141,19 @@ p
 
 Testing out different projections. When to use which is open question. 
 
-```{r projections, message=FALSE, warning=FALSE}
+```{r projections, message=FALSE, warning=FALSE, cache=TRUE}
 
 data = experiment$assays$dna$data_layers$VAF
 L<-2 #number of latent dimensions
 
 projections = list()
 
-res1<-glmpca(data,L,fam="poi",verbose=TRUE)
-projections[['Projection:glm_poi DR:glm_poi data:vaf']] = tibble(x = res1$loadings[,1], y = res1$loadings[,2])
-res2<-glmpca(data,L,fam="nb",verbose=TRUE)
-projections[['Projection:glm_nb DR:glm_nb data:vaf']] = tibble(x = res2$loadings[,1], y = res2$loadings[,2])
-res3<-prcomp(data,center=TRUE,scale.=TRUE,rank.=L)
-projections[['Projection:pca DR:pca data:vaf']] = tibble(x = res3$x[,1], y = res3$x[,2])
+# res1<-glmpca(data,L,fam="poi",verbose=TRUE)
+# projections[['Projection:glm_poi DR:glm_poi data:vaf']] = tibble(x = res1$loadings[,1], y = res1$loadings[,2])
+# res2<-glmpca(data,L,fam="nb",verbose=TRUE)
+# projections[['Projection:glm_nb DR:glm_nb data:vaf']] = tibble(x = res2$loadings[,1], y = res2$loadings[,2])
+# res3<-prcomp(data,center=TRUE,scale.=TRUE,rank.=L)
+# projections[['Projection:pca DR:pca data:vaf']] = tibble(x = res3$x[,1], y = res3$x[,2])
 
 umap_values <- umap(data, scale=TRUE, metric="euclidean", init="laplacian", pca=20) 
 projections[['Projection:umap_euclidean DR:pca data:vaf']] = tibble(x = umap_values[,1], y = umap_values[,2])
@@ -231,22 +230,12 @@ clusters = list()
 for(i in 2:5) {
   kmean_values <- kmeans(cluster_by, i ,iter.max=500)
   clusters[[paste0('umap.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
-
-  kmean_values <- kmeans(cluster_by, i ,iter.max=500)
-  clusters[[paste0('feature.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
-
 }
 
 graph_values <- buildSNNGraph(t(cluster_by), k=150)
 louvain_clust <- igraph::cluster_louvain(graph_values)$membership
 
 clusters[['umap.louvain.cluster']] = as_factor(louvain_clust)
-
-graph_values <- buildSNNGraph(t(cluster_by), k=150)
-louvain_clust <- igraph::cluster_louvain(graph_values)$membership
-
-clusters[['features.louvain.cluster']] = as_factor(louvain_clust)
-
 
 #############
 ## Add cluster labels to analysis data structure
@@ -261,7 +250,7 @@ experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_
 can you tell which method is best from plotting? 
 
 ```{r fig.width = 12, fig.height = 8}
-color_by = experiment$assays$dna$analysis_layers$umap_vaf_clusters %>% select(features.louvain.cluster,feature.kmean.cluster.4)
+color_by = experiment$assays$dna$analysis_layers$umap_vaf_clusters %>% select(umap.louvain.cluster,umap.kmean.cluster.4)
 plots = list()
 for(projection in names(experiment$assays$dna$analysis_layers$projections)) {
   plots[[projection]] = tapestri_scatterplot(
@@ -281,10 +270,14 @@ change the x and y to use different projections
 
 ```{r fig.width = 12, fig.height = 8}
 
+color_by = experiment$assays$dna$analysis_layers$umap_vaf_clusters
+projection = experiment$assays$dna$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
+
+
 p  = tapestri_scatterplot(
-                 x = experiment$assays$dna$analysis_layers$projections$`Projection:glm_poi DR:glm_poi data:vaf`$x, 
-                 y= experiment$assays$dna$analysis_layers$projections$`Projection:glm_poi DR:glm_poi data:vaf`$y, 
-                 color_by = experiment$assays$dna$analysis_layers$umap_vaf_clusters)
+                 x = projection$x, 
+                 y= projection$y, 
+                 color_by = color_by)
 p = p + umap_theme() + ggtitle('umap_vaf_clusters')
 p
 
@@ -368,7 +361,7 @@ p
 
 clustering by kmeans and louvain on umap projection and raw features
 
-```{r cache=TRUE}
+```{r cluster_proteins, cache=TRUE}
 
 
 #dimensional reduction using umap
@@ -394,20 +387,12 @@ for(i in 2:5) {
   kmean_values <- kmeans(cluster_by, i ,iter.max=500)
   clusters[[paste0('umap.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
 
-  kmean_values <- kmeans(cluster_by, i ,iter.max=500)
-  clusters[[paste0('feature.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
-
 }
 
 graph_values <- buildSNNGraph(t(cluster_by), k=150)
 louvain_clust <- igraph::cluster_louvain(graph_values)$membership
 
 clusters[['umap.louvain.cluster']] = as_factor(louvain_clust)
-
-graph_values <- buildSNNGraph(t(cluster_by), k=150)
-louvain_clust <- igraph::cluster_louvain(graph_values)$membership
-
-clusters[['features.louvain.cluster']] = as_factor(louvain_clust)
 
 
 #############
@@ -449,11 +434,11 @@ to do:
 p_umap  = tapestri_scatterplot(
                  x = experiment$assays$protein$analysis_layers$umap$x, 
                  y= experiment$assays$protein$analysis_layers$umap$y, 
-                 color_by = experiment$assays$protein$analysis_layers$clusters$features.louvain.cluster) + 
+                 color_by = experiment$assays$protein$analysis_layers$clusters$umap.louvain.cluster) + 
   xlab('') + ylab('') + umap_theme() 
 
 p_violin = tapestri_violinplot(
-           clusters = experiment$assays$protein$analysis_layers$clusters$features.louvain.cluster,
+           clusters = experiment$assays$protein$analysis_layers$clusters$umap.louvain.cluster,
            features = experiment$assays$protein$data_layers$normalized)
 
 p_umap / p_violin
@@ -521,7 +506,7 @@ cnv.h
 
 p = tapestri_ploidy_plot(
   normalized_reads = experiment$assays$cnv$analysis_layers$norm_to_baseline,
-  clusters = experiment$assays$dna$analysis_layers$umap_vaf_clusters$feature.kmean.cluster.4
+  clusters = experiment$assays$dna$analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
   )
 p
 ```

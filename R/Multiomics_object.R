@@ -129,47 +129,42 @@ create_moo<- function(experiment_name, cell_annotations) {
 #'
 #' @param moo Multiomics object 
 #' @param assay new Assay object to add
-#' @param keep_common_cells default FALSE. Will throw error if number of cells and cell barcodes dont match. If TRUE merge assays and only keep intersect of cells from all assays. 
+#' @param keep_common_cells default FALSE. Will throw error if number of cells and cell ids dont match. If TRUE merge assays and only keep intersect of cells from all assays. 
 #'
 #' @return
 #' @export
 #'
 add_assay <- function(moo, assay, keep_common_cells=FALSE) {
   
-  #moo = experiment 
-  #assay = cnv
-  
+  # moo = experiment
+  # assay = protein
+
   if(class(assay) != "Tapestri_Assay") {
     stop('Not a valid assay.')  
   }
 
   #check if the cells in the new assay matches current assay cells
-  if(length(moo@cell_annotations$barcode) != length(assay@cell_annotations$barcode) ||
-    all.equal(moo@cell_annotations$barcode, assay@cell_annotations$barcode) != TRUE) {
+  if(length(moo@cell_annotations$id) != length(assay@cell_annotations$id) ||
+    all.equal(moo@cell_annotations$id, assay@cell_annotations$id) != TRUE) {
     
     #if not, but we want to keep only the intersect
-    if (keep_common_cells) {
-      interected_barcodes = dplyr::intersect(assay@cell_annotations$barcode, moo@cell_annotations$barcode)
+    if (!keep_common_cells) {
+      stop('Cell IDs do not match')  
+    } else {
+      interected_cell_ids = dplyr::intersect(assay@cell_annotations$id, moo@cell_annotations$id)
+      cell_ind = match(interected_cell_ids, moo@cell_annotations$id)
       
-      suppressWarnings(rownames(moo@cell_annotations) <- moo@cell_annotations$barcode)
-      moo@cell_annotations = moo@cell_annotations[interected_barcodes,]
-      
-      #new_moo = create_moo(experiment_name = moo@experiment_name,cell_annotations = interected_cell_annotations)
+      moo@cell_annotations = moo@cell_annotations[cell_ind,]
 
       for(assay_name in names(moo@assays)) {
-        a = cell_filter_assay(assay = moo@assays[[assay_name]], barcodes = interected_barcodes)
-        moo@assays[[assay_name]] = a
+        moo@assays[[assay_name]] = subset_assay(assay = moo@assays[[assay_name]], keep_cell_ids = interected_cell_ids)
       }
       
-      moo@assays[[assay@assay_name]] = cell_filter_assay(assay = assay, barcodes = interected_barcodes)
-    
-    } else {
-      stop('Cell IDs do not match')  
+      moo@assays[[assay@assay_name]] = subset_assay(assay = assay, keep_cell_ids = interected_cell_ids)
     }
   } else {
     #the cell info is the same between current assays and new one
     moo@assays[[assay@assay_name]] = assay    
-    
   }
   moo@metadata[['cell_info']] = moo@cell_annotations %>% group_by(sample) %>% summarise(cells=n())
   
@@ -178,23 +173,7 @@ add_assay <- function(moo, assay, keep_common_cells=FALSE) {
 }
 
 
-cell_filter_assay<- function(assay, barcodes) {
-  
-  for(layer in names(assay@data_layers)){
-    suppressWarnings(rownames(assay@data_layers[[layer]]) <- assay@cell_annotations$barcode)
-    assay@data_layers[[layer]] = assay@data_layers[[layer]][barcodes,]
-  }
-  for(layer in names(assay@analysis_layers)){
-    suppressWarnings(rownames(assay@analysis_layers[[layer]]) <- assay@cell_annotations$barcode)
-    assay@analysis_layers[[layer]] = assay@analysis_layers[[layer]][barcodes,]
-  }
-  suppressWarnings(rownames(assay@cell_annotations) <- assay@cell_annotations$barcode)
-  assay@cell_annotations = assay@cell_annotations[barcodes,]
-  
-  assay@metadata[['cell_info']] = assay@cell_annotations %>% group_by(sample) %>% summarise(cell=n())
-  
-  return(assay)
-}
+
 
 
 
