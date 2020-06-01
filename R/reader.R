@@ -94,7 +94,7 @@ read_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
   h5f = rhdf5::H5Fopen(filename, flags = "H5F_ACC_RDONLY")
   object_str = h5ls(h5f)
   object_str$object_names = paste0(object_str$group,'/',object_str$name)
-  dims = str_match(string = object_str$dim, pattern = '(.*) x (.*)')
+  dims = stringr::str_match(string = object_str$dim, pattern = '(.*) x (.*)')
   object_str$rows = as.numeric(dims[,2])
   object_str$columns = as.numeric(dims[,3])
   
@@ -164,12 +164,65 @@ read_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
     colnames(data) <- filtered_features$id
     assay = add_data_layer(assay = assay, layer_name = layer, data = data)
   }
-
   
   h5closeAll()
   
   return(assay)     
 }
+
+
+#' Read variant assay from data exported from Tapestri Insights
+#'
+#' @param export_dir directory path to exported data. Should contain "AF.csv", "DP.csv", "GQ.csv", "NGT.csv", "README.txt", "Variants.csv"
+#'
+#' @return
+#' @export
+#'
+#' @examples
+read_insights_export <- function(export_dir) {
+  layers = c('NGT', 'AF', 'DP', 'GQ')
+  annotations = 'Variants'
+  files = c(layers, annotations)
+  files_exist = file.exists(paste0(export_dir, '/', files, '.csv'))
+  if (any(!files_exist))
+    stop(sprintf('Some files missing: %s', paste(files[!files_exist])))
+  
+  
+  ngt = read_csv(paste0(export_dir, '/', 'NGT.csv'))
+  
+  # check if ngt file has only relavent values
+  #unique(c(as.matrix(ngt %>% select(-Sample, -Cell))))
+  
+  cell_annotations = ngt %>% select(sample = Sample, barcode = Cell) %>%
+    mutate(barcode = as.character(barcode),
+           id = paste0(sample, '-', barcode))
+  
+  
+  
+  variant_annotations = read_csv(paste0(export_dir, '/', annotations, '.csv'))
+  variant_annotations = bind_cols(variant_annotations,
+                                  annotate_variants(variant_annotations$Variant))
+  variant_annotations = variant_annotations %>% arrange(as.numeric(CHROM), as.numeric(POS))
+  
+  variants_from_insights = create_assay(
+    assay_name = 'variants',
+    cell_annotations = cell_annotations,
+    feature_annotations = variant_annotations
+  )
+  suppressMessages(for (layer in layers) {
+    layer_data = read_csv(paste0(export_dir, '/', layer, '.csv'))
+    layer_data = layer_data %>% select(-Sample,-Cell) %>% select(variant_annotations$id)
+    
+    variants_from_insights = add_data_layer(assay = variants_from_insights,
+                                            layer_name = layer,
+                                            data = layer_data)
+    
+  })
+  
+  return(variants_from_insights)  
+}
+
+
 
 validate_cell_annotations <- function(cell_annotations){
   
@@ -181,6 +234,13 @@ validate_cell_annotations <- function(cell_annotations){
   if(!'barcode' %in% colnames(cell_annotations)){
     cell_annotations = cell_annotations %>% mutate(barcode=row_number())
   }
+
+  if(!'id' %in% colnames(cell_annotations)){
+    cell_annotations = cell_annotations %>% mutate(id=paste0(sample,'-',barcode))
+  } else if (any(duplicated(cell_annotations$id))) {
+    stop('cell annotations id must be unique.')
+  }
+
   return(cell_annotations)
 }
 
@@ -195,10 +255,11 @@ validate_cell_annotations <- function(cell_annotations){
 
 annotate_variants <- function(variant_ids) {
   
-  variant_annotations = str_match(variant_ids,'(.*?):?chr(.*?):([[:digit:]]*):')
+  variant_annotations = stringr::str_match(variant_ids,'(.*?):?chr(.*?):([[:digit:]]*):')
   variant_annotations = tibble(id=variant_ids, CHROM=variant_annotations[,3], POS=as.numeric(variant_annotations[,4]), gene_name=variant_annotations[,2])
   
   return(variant_annotations)
 }
+
 
 
