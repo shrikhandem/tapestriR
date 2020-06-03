@@ -41,8 +41,9 @@ normalize_dna_reads <- function(reads, advanced = FALSE) {
 #' Identify ploidy for samples
 #'
 
-#' @param bcfile.norm Normalised barcode distribution
-#' @param baseline_cluster_cells vector of TRUE/FALSE of size number of cells baseline normal cluster cells
+#' @param reads dna read counts matrix
+#' @param clusters vector with labels for which cluster each cell belongs to
+#' @param baseline_cluster one cluster label assumed to be the normal cell population with ploidy 2. 
 #'
 #' @return normalized read counts centered around ploidy 2. amplicons with low read counts are removed
 #' @export

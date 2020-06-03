@@ -7,9 +7,11 @@
 compute_ploidy(reads, clusters, baseline_cluster)
 }
 \arguments{
-\item{bcfile.norm}{Normalised barcode distribution}
+\item{reads}{dna read counts matrix}
 
-\item{baseline_cluster_cells}{vector of TRUE/FALSE of size number of cells baseline normal cluster cells}
+\item{clusters}{vector with labels for which cluster each cell belongs to}
+
+\item{baseline_cluster}{one cluster label assumed to be the normal cell population with ploidy 2.}
 }
 \value{
 normalized read counts centered around ploidy 2. amplicons with low read counts are removed

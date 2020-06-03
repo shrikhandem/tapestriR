@@ -21,7 +21,20 @@ Vignettes showing how to load data and performance analysis:
 
 1) `multiomics_analysis.Rmd' - load a multiomic DNA + Protein h5 file. 
 2) `dna_analysis.Rmd' - load a DNA only loom file. 
-3) todo: load single sample or multisample data exported from Tapestri Insights
+3) `raji_k562_analysis.Rmd' - load data from Tapestri Insights export. 
+
+# What's included
+
+Data manipulation 
+Read
+Filter
+Transform
+Data Visualization
+
+Object functions
+
+
+* Loading data
 
 # Objects
 

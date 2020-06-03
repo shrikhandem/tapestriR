@@ -2,18 +2,20 @@
 % Please edit documentation in R/Assay_object.R
 \name{subset_assay}
 \alias{subset_assay}
-\title{Title}
+\title{Subset assay}
 \usage{
 subset_assay(assay, keep_cell_ids = TRUE, keep_feature_ids = TRUE)
 }
 \arguments{
-\item{assay}{}
+\item{assay}{Assay object to subset}
 
-\item{barcodes}{}
+\item{keep_cell_ids}{vector of cell ids to keep}
+
+\item{keep_feature_ids}{vector of feature ids to keep}
 }
 \value{
-
+return subsetted assay
 }
 \description{
-Title
+Subset assay
 }

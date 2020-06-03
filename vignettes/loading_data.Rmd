@@ -35,16 +35,16 @@ for(i in 1:length(packages)) {
 
 
 
-ASSAY_NAME_VARIANT = 'dna'
-ASSAY_NAME_READ_COUNT = 'cnv'
-ASSAY_NAME_PROTEIN = 'protein'
+# ASSAY_NAME_VARIANT = 'dna'
+# ASSAY_NAME_READ_COUNT = 'cnv'
+# ASSAY_NAME_PROTEIN = 'protein'
 
 
 
 ```
 
 
-### Load from Loom
+# Load from Loom
 
 Work for DNA only. Only single sample, since loom files only contain 1 sample.  
 
@@ -62,7 +62,7 @@ filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
 ```
 
-#### Demension Reduction
+## Demension Reduction
 
 ```{r}
 
@@ -80,7 +80,7 @@ filtered_variants = add_analysis_layer(assay = filtered_variants, layer_name = '
 
 ```
 
-#### Plot the data
+## Plot the data
 
 ```{r}
 
@@ -92,7 +92,7 @@ p
 ```
 
 
-### Load multiomics H5
+# Load multiomics H5
 
 Works for DNA, DNA + Protein data. Also works from multisample. best practice is to create a multiassay, multisample h5 in pipeline, and apply filters before loading into R. 
 
@@ -109,38 +109,29 @@ usage:
 
 filename <- system.file("extdata", "ABseq021.h5", package = "TapestriR")
 
-# ideally would just start by loading filtered H5, but for now will send filtering list to function to mimic
-variants = read_h5(filename = filename, assay_name = ASSAY_NAME_VARIANT, min_mutation_rate = 0.005)
+experiment = read_tap(filename)
 
-filtered_variants = filter_variants(variants)
-
+# ideally would just start by loading filtered H5, but for now will load data with some basic filters
+filtered_variants = filter_variants(experiment$assays$dna)
 vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
 vaf[is.na(vaf)] <- 0
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
-### load protein assay and normalize
-protein = read_h5(filename = filename, assay_name = ASSAY_NAME_PROTEIN)
+#add the filtered data back to experiment, this will subset the rest of the assays to make sure we have same cells
+experiment = add_assay(experiment,filtered_variants, keep_common_cells = TRUE)
 
 # normalize using clr method
-protein_counts_norm = protein@data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
+protein_counts_norm = experiment$assays$protein$data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
 # add normalized data to protein assay
-protein = add_data_layer(protein,'normalized',protein_counts_norm)
+experiment$assays$protein = add_data_layer(experiment$assays$protein,'normalized',protein_counts_norm)
 
-### load cnv assay 
-cnv = read_h5(filename,assay_name = ASSAY_NAME_READ_COUNT)
-normalized_dna_reads = normalize_dna_reads(cnv$data_layers$read_counts)
-cnv = add_data_layer(cnv,'normalized',normalized_dna_reads)
 
-### create multiomics object (moo)
-moo = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
-moo = add_assay(moo,filtered_variants)
-moo = add_assay(moo,cnv,keep_common_cells = TRUE)
-moo = add_assay(moo,protein, keep_common_cells = TRUE)
+normalized_dna_reads = normalize_dna_reads(experiment$assays$cnv$data_layers$read_counts)
+experiment$assays$cnv = add_data_layer(experiment$assays$cnv,'normalized',normalized_dna_reads)
 
-experiment = moo
 ```
 
-#### X-Y plots
+## X-Y plots
 
 1) select which proteins to plot on X and Y axis
 2) select set of other feature(s) to color the plot by. If you choose more then one feature, each feature will be plotted in a subplot
@@ -191,7 +182,7 @@ p
 
 ```
 
-#### Demension Reduction
+## Demension Reduction
 
 ```{r}
 
@@ -211,7 +202,7 @@ experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_
 ```
 
 
-#### Plot the data
+## Plot the data
 
 ```{r}
 
@@ -222,7 +213,7 @@ p
 ```
 
 
-### Load data from Tapestri Insights Export
+# Load data from Tapestri Insights Export
 
 Work for DNA only. Export can be from a multisample project in Tapestri Insights. 
 usage:

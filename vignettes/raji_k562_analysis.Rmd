@@ -1,5 +1,5 @@
 ---
-title: "Multi-omics Analysis"
+title: "Multi-Sample export from Insights"
 output:
   html_document:
     df_print: paged
@@ -8,13 +8,13 @@ editor_options:
   
   chunk_output_type: console
 vignette: >
-  %\VignetteIndexEntry{Multi-omics Analysis}
+  %\VignetteIndexEntry{Multi-Sample export from Insights}
   \usepackage[utf8]{inputenc}
   %\VignetteEngine{knitr::rmarkdown}
 ---
 
 
-```{r load_libraries, include=FALSE}
+```{r load_libraries, message=FALSE, warning=FALSE, include=FALSE}
 
 library(TapestriR)
 
@@ -36,15 +36,11 @@ for(i in 1:length(packages)) {
   require(package=package, character.only=TRUE)
 }
 
-ASSAY_NAME_VARIANT = 'dna'
-ASSAY_NAME_READ_COUNT = 'cnv'
-ASSAY_NAME_PROTEIN = 'protein'
-
 
 ```
 
 
-### Load data from Tapestri Insights Export
+# Load data from Tapestri Insights Export
 
 Work for DNA only. Export can be from a multisample project in Tapestri Insights. 
 usage:
@@ -67,7 +63,7 @@ variants = add_data_layer(variants,'VAF',variants$data_layers$AF)
 ```
 
 
-## Different projections
+# Different projections
 
 Testing out different projections. When to use which is open question. 
 
@@ -114,7 +110,7 @@ variants = add_analysis_layer(assay = variants, layer_name = 'projections', as_t
 
 
 
-### Figure out how many clusters?
+# Figure out how many clusters?
 
 This is not a trivial problem. Its left to user to explore the data. Here are a few examples on determining the number of clusters in your data. 
 
@@ -145,13 +141,11 @@ silhouette = fviz_nbclust(cluster_on, kmeans, method = "silhouette")+
 ```
 
 
-### Cluster SNV
+# Cluster SNV
 
 clustering by kmeans and louvain on umap projection and raw features
 
 ```{r cluster snv, cache=TRUE}
-
-
 
 ### Hold all the different customer labels in a single structure
 name = 'Projection:umap_manhattan DR:pca data:vaf'
@@ -180,7 +174,7 @@ variants = add_analysis_layer(assay = variants, layer_name = paste0('Cluster on 
 
 ```
 
-## Plot all the different projections
+# Plot all the different projections and clusters
 
 can you tell which method is best from plotting? 
 
@@ -214,7 +208,7 @@ wrap_plots(plots) + plot_annotation(name)
 ```
 
 
-### Single assay or multiomic heatmap
+# SNV Heatmap
 
 Users should become familiar with ComplexHeatmap::Heatmap https://jokergoo.github.io/ComplexHeatmap-reference/book/ 
 We're only providing a simple example to get started.

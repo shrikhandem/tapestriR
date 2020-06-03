@@ -193,22 +193,17 @@ add_analysis_layer<- function(assay, layer_name, data) {
 }
 
 
-#' Title
+#' Subset assay
 #'
-#' @param assay 
-#' @param barcodes 
+#' @param assay Assay object to subset
+#' @param keep_cell_ids vector of cell ids to keep
+#' @param keep_feature_ids vector of feature ids to keep
 #'
-#' @return
+#' @return return subsetted assay
 #' @export
 #'
-#' @examples
 subset_assay<- function(assay, keep_cell_ids=TRUE, keep_feature_ids = TRUE) {
   
-  # assay <- variant_assay
-  # kept_variants -> keep_feature_ids
-  # kept_cells -> keep_cell_ids
-  #if(length(keep_cell_ids) ==nrow(assay)) stop('')
-  #if(length(keep_feature_ids) ==1 && is.na(keep_feature_ids)) keep_feature_ids = TRUE
   if (length(keep_cell_ids) > 1) {
     cell_ind = match(keep_cell_ids, assay@cell_annotations$id)
     if (any(is.na(cell_ind))) stop('cell ids to keep dont exist in assay.')
