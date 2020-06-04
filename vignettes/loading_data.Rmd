@@ -33,14 +33,6 @@ for(i in 1:length(packages)) {
   require(package=package, character.only=TRUE)
 }
 
-
-
-# ASSAY_NAME_VARIANT = 'dna'
-# ASSAY_NAME_READ_COUNT = 'cnv'
-# ASSAY_NAME_PROTEIN = 'protein'
-
-
-
 ```
 
 

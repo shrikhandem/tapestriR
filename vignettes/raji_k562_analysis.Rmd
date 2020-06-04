@@ -23,9 +23,6 @@ theme_set(theme_bw())
 library(plotly)
 library(patchwork)
 
-# protein normalization library
-#library(SciViews)
-
 packages <- c("factoextra",  "NbClust", 'scran', 'uwot','glmpca', 'ComplexHeatmap')
 
 for(i in 1:length(packages)) {

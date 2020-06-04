@@ -31,17 +31,6 @@ umap_theme <- function() {
 #' @export
 tapestri_scatterplot <- function(x, y, color_by) {
   
-  
-  # data = analysis_df
-  # x = analysis_df$protein$features$CD110
-  # y = analysis_df$protein$features$CD33
-  # 
-  # color_by = analysis_df$protein$features
-  
-  ##################
-  # create a new tibble with columns of data you want plot, 
-  # make sure the x, y and color_by are in this new tibble
-  ##################
   data_to_plot = tibble(
     x = x,
     y = y,
@@ -79,11 +68,6 @@ tapestri_violinplot <- function(clusters , features) {
   # clusters = analysis_df$protein$clusters$umap.kmean.cluster.2
   # features = analysis_df$protein$features
   
-  
-  ##################
-  # create a new tibble with columns of data you want plot, 
-  # make sure the x, y and color_by are in this new tibble
-  ##################
   data_to_plot = tibble(
     clusters = clusters,
     features

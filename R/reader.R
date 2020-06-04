@@ -33,9 +33,10 @@ read_loom <- function(filename, min_mutation_rate=0.05) {
   # })
   
   features =as_tibble(rhdf5::h5read(h5f,sprintf("row_attrs")))
-    
+  features = validate_variant_annotations(features)
+  
   cell_annotations <- as_tibble(rhdf5::h5read(h5f,sprintf("col_attrs")))
-
+  
   if(nrow(cell_annotations) ==0) {
     cell_annotations = tibble(
       sample=rep(basename(filename),nrow(ngt)),
@@ -87,12 +88,12 @@ read_loom <- function(filename, min_mutation_rate=0.05) {
 read_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
   
   #filename <- "~/Google Drive/launches/r_package/data/merged_all.h5"
-  #assay_name=ASSAY_NAME_PROTEIN
+  #assay_name='dna'
   # layer = 'NGT'
   # min_mutation_rate = 0.1
 
   h5f = rhdf5::H5Fopen(filename, flags = "H5F_ACC_RDONLY")
-  object_str = h5ls(h5f)
+  object_str = rhdf5::h5ls(h5f)
   object_str$object_names = paste0(object_str$group,'/',object_str$name)
   dims = stringr::str_match(string = object_str$dim, pattern = '(.*) x (.*)')
   object_str$rows = as.numeric(dims[,2])
@@ -109,21 +110,24 @@ read_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
     stop(sprintf('H5 file does not seem to be a standard structure. Missing %s.', ra))
   }
   
-  features =as_tibble(rhdf5::h5read(h5f,ca))
   cell_annotations <- as_tibble(rhdf5::h5read(h5f,ra))
-  
   cell_annotations <- validate_cell_annotations(cell_annotations = cell_annotations)  
   
+  features =as_tibble(rhdf5::h5read(h5f,ca))
+  
   if(assay_name == ASSAY_NAME_VARIANT) {
-    
     # filter data to make it manageable in R
+    
+    features = validate_variant_annotations(features)  
+    
     ngt_path = sprintf("/assays/%s/layers/NGT",assay_name)    
     if(!ngt_path %in% object_str$object_names) {
       stop(sprintf('H5 file does not seem to be a standard structure. Missing %s.', ngt_path))
     }
     
     mutation_rate = c()
-    chunks = c(seq(from=1, to=object_str$rows[object_str$object_names == ngt_path],by = 10000), object_str$rows[object_str$object_names == ngt_path])
+    chunks = c(seq(from=1, to=object_str$rows[object_str$object_names == ngt_path],by = 10000), 
+               object_str$rows[object_str$object_names == ngt_path])
     for(i in 2:length(chunks)){
       ngt = rhdf5::h5read(h5f,ngt_path, index = list(chunks[i-1]:chunks[i],NULL))      
       mutated <- (ngt == 1 | ngt == 2)
@@ -167,7 +171,7 @@ read_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
     assay = add_data_layer(assay = assay, layer_name = layer, data = data)
   }
   
-  h5closeAll()
+  rhdf5::h5closeAll()
   
   return(assay)     
 }
@@ -231,12 +235,12 @@ read_insights_export <- function(export_dir) {
     mutate(barcode = as.character(barcode),
            id = paste0(sample, '-', barcode))
   
-  
+  cell_annotations <- validate_cell_annotations(cell_annotations = cell_annotations)  
   
   variant_annotations = readr::read_csv(paste0(export_dir, '/', annotations, '.csv'))
-  variant_annotations = bind_cols(variant_annotations,
-                                  annotate_variants(variant_annotations$Variant))
-  variant_annotations = variant_annotations %>% arrange(as.numeric(CHROM), as.numeric(POS))
+  variant_annotations = variant_annotations %>% mutate(id=variant_annotations$Variant)
+  variant_annotations = validate_variant_annotations(variant_annotations)
+  
   
   variants_from_insights = create_assay(
     assay_name = 'variants',
@@ -281,18 +285,26 @@ validate_cell_annotations <- function(cell_annotations){
 
 #' Annotate Variants based on variant ID field
 #'
-#' @param variant_ids variant id like 'ASXL1:chr20:31022959:T/C' 
+#' @param variant_annotations table of annotations. unique id column must exist. if its in format 'SF3B1:chr2:198266943:C/T' try to parse into CHROM and POS
 #'
 #' @return
 #' @export
 #' @import stringr
 #' @import tibble
 
-annotate_variants <- function(variant_ids) {
+validate_variant_annotations <- function(variant_annotations) {
   
-  variant_annotations = stringr::str_match(variant_ids,'(.*?):?chr(.*?):([[:digit:]]*):')
-  variant_annotations = tibble(id=variant_ids, CHROM=variant_annotations[,3], POS=as.numeric(variant_annotations[,4]), gene_name=variant_annotations[,2])
+  if(!'id' %in% colnames(variant_annotations)) stop('id column must exist.')
+  if(any(duplicated(variant_annotations$id))) stop('id column has duplicates.')
   
+  if(any(!c('CHROM','POS') %in% colnames(variant_annotations))){
+    split_ids = stringr::str_match(variant_annotations$id,'(.*?):?chr(.*?):([[:digit:]]*):')
+    if(any(is.na(split_ids[,3])) | any(is.na(split_ids[,4]))) stop(sprintf('id column cannot be easily parsed into CHROM and POS.'))
+       
+    variant_annotations = variant_annotations %>% mutate(CHROM=split_ids[,3], POS=as.numeric(split_ids[,4]), gene_name=split_ids[,2])  
+    variant_annotations = variant_annotations %>% arrange(as.numeric(CHROM), as.numeric(POS))
+  }
+
   return(variant_annotations)
 }
 
