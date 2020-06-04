@@ -26,7 +26,6 @@ umap_theme <- function() {
 #' @param y plot of y
 #' @param color_by what features of color by 
 #'
-#' @import tidyverse
 #' @import ggplot2
 #' @return ggplot object
 #' @export
@@ -69,8 +68,8 @@ tapestri_scatterplot <- function(x, y, color_by) {
 #' @param clusters clusters to split data by
 #' @param features features to plot as violin graph
 #'
-#' @import tidyverse
 #' @import ggplot2
+#' @import tidyr
 
 #' @return
 #' @export
@@ -114,7 +113,7 @@ tapestri_violinplot <- function(clusters , features) {
 #'
 #' @return
 #' @export
-#' @import tidyverse
+#' @import forcats
 #'
 recode_genotypes <- function(x,collapse_zygosity=TRUE) {
   if (collapse_zygosity) {
@@ -139,14 +138,14 @@ recode_genotypes <- function(x,collapse_zygosity=TRUE) {
 
 
 
-#' Title
+#' Calculate ploidy 
 #'
+#'  
 #' @param normalized_reads read counts per amplicon per cell
 #' @param clusters cluster labels 
 #'
 #' @return
 #' @export
-#' @import tidyverse
 #' 
 tapestri_ploidy_plot <- function(normalized_reads, clusters) {
   
@@ -158,7 +157,7 @@ tapestri_ploidy_plot <- function(normalized_reads, clusters) {
   df_long = data_to_plot %>% 
     pivot_longer(-c(contains('clusters')), 
                  names_to = 'feature',values_to = 'value') %>% 
-    mutate(feature = as_factor(feature)) %>% group_by(feature) %>% mutate(median_count = median(value,na.rm = TRUE)) 
+    mutate(feature = as_factor(feature)) %>% group_by(feature) %>% mutate(median_count = stats::median(value,na.rm = TRUE)) 
   
   # group by clusters
   p = ggplot(data=df_long, aes(x=feature, y=value))
@@ -170,7 +169,7 @@ tapestri_ploidy_plot <- function(normalized_reads, clusters) {
                         alpha=.04
   )
   
-  p  = p + stat_summary(fun = median, geom = "crossbar", width = 0.8) + facet_wrap(~clusters, ncol=1) + 
+  p  = p + stat_summary(fun = stats::median, geom = "crossbar", width = 0.8) + facet_wrap(~clusters, ncol=1) + 
     ylim(c(0,ceiling(max(df_long$median_count))+1))
   p = p + geom_hline(aes(yintercept=2), color="red", size=1, alpha=.5)
   p = p + xlab('') + ylab('')

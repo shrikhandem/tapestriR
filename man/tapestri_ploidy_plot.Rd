@@ -2,7 +2,7 @@
 % Please edit documentation in R/visualization.R
 \name{tapestri_ploidy_plot}
 \alias{tapestri_ploidy_plot}
-\title{Title}
+\title{Calculate ploidy}
 \usage{
 tapestri_ploidy_plot(normalized_reads, clusters)
 }
@@ -15,5 +15,5 @@ tapestri_ploidy_plot(normalized_reads, clusters)
 
 }
 \description{
-Title
+Calculate ploidy
 }

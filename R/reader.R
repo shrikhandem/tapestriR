@@ -79,7 +79,7 @@ read_loom <- function(filename, min_mutation_rate=0.05) {
 #' @return Tapestri multi-omics object
 #' @export
 #' @import rhdf5
-#' @import tidyverse
+#' @import stringr
 #' @examples
 #' \dontrun{
 #' tapestri_raw = h5_reader(filename,min_mutation_rate = 0.1)
@@ -221,7 +221,7 @@ read_insights_export <- function(export_dir) {
     stop(sprintf('Some files missing: %s', paste(files[!files_exist])))
   
   
-  ngt = read_csv(paste0(export_dir, '/', 'NGT.csv'))
+  ngt = readr::read_csv(paste0(export_dir, '/', 'NGT.csv'))
 
   # check if ngt file has only relavent values
   #unique(c(as.matrix(ngt %>% select(-Sample, -Cell))))
@@ -233,7 +233,7 @@ read_insights_export <- function(export_dir) {
   
   
   
-  variant_annotations = read_csv(paste0(export_dir, '/', annotations, '.csv'))
+  variant_annotations = readr::read_csv(paste0(export_dir, '/', annotations, '.csv'))
   variant_annotations = bind_cols(variant_annotations,
                                   annotate_variants(variant_annotations$Variant))
   variant_annotations = variant_annotations %>% arrange(as.numeric(CHROM), as.numeric(POS))
@@ -244,7 +244,7 @@ read_insights_export <- function(export_dir) {
     feature_annotations = variant_annotations
   )
   suppressMessages(for (layer in layers) {
-    layer_data = read_csv(paste0(export_dir, '/', layer, '.csv'))
+    layer_data = readr::read_csv(paste0(export_dir, '/', layer, '.csv'))
     layer_data = layer_data %>% select(-Sample,-Cell) %>% select(variant_annotations$id)
     
     variants_from_insights = add_data_layer(assay = variants_from_insights,
@@ -285,7 +285,8 @@ validate_cell_annotations <- function(cell_annotations){
 #'
 #' @return
 #' @export
-#' @import tidyverse
+#' @import stringr
+#' @import tibble
 
 annotate_variants <- function(variant_ids) {
   

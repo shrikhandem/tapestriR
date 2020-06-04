@@ -14,12 +14,13 @@ Depends:
   R (>= 3.6.0)
 Imports: 
   rhdf5, 
-  tidyverse,
   dplyr,
+  tidyr,
   ggplot2,
-  patchwork,
-  ggthemes, 
-  plotly,
+  readr,
+  stringr,
+  forcats,
+  tibble,
   SciViews,
   EnvStats,
   methods
