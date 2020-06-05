@@ -17,8 +17,3 @@ Tapestri object
 \description{
 Read loom file created by Tapestri pipeline
 }
-\examples{
-\dontrun{
-tapestri_raw = loom_reader(filename, min_mutation_rate = 0.1)
-}
-}

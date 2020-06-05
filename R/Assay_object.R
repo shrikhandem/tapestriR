@@ -158,7 +158,7 @@ add_data_layer<- function(assay, layer_name, data) {
   }
   dim_check = all.equal(dim(data), dim(assay))
   if(dim_check !=TRUE){
-    stop(sprintf('Annotations not the same length as features.\n%s', dim_check))
+    stop(sprintf('Demension of new data layer must be the same as current layers.\n%s', dim_check))
   }
   
   # suppressWarnings(

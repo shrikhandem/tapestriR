@@ -9,10 +9,7 @@ ASSAY_NAME_VARIANT = 'dna'
 #' @return Tapestri object
 #' @export
 #' @import rhdf5
-#' @examples
-#' \dontrun{
-#' tapestri_raw = loom_reader(filename, min_mutation_rate = 0.1)
-#' }
+#' 
 read_loom <- function(filename, min_mutation_rate=0.05) {
   
   # filename <- "data/PE11.cells.loom"
@@ -21,20 +18,28 @@ read_loom <- function(filename, min_mutation_rate=0.05) {
   
   assay_name = ASSAY_NAME_VARIANT
   h5f = rhdf5::H5Fopen(filename, flags = "H5F_ACC_RDONLY")
-  #rhdf5::h5ls(h5f)
   
-  ngt = h5f$matrix
-  mutated <- (ngt == 1 | ngt == 2)
-  mutation_rate <- base::colMeans(mutated, na.rm = T)
+
+  object_str = rhdf5::h5ls(h5f)
+  object_str$object_names = paste0(object_str$group,'/',object_str$name)
+  dims = stringr::str_match(string = object_str$dim, pattern = '(.*) x (.*)')
+  object_str$rows = as.numeric(dims[,2])
+  object_str$columns = as.numeric(dims[,3])
+  ngt_path = 'matrix'
+  nvariants = object_str$columns[object_str$object_names == ngt_path | object_str$name == ngt_path][1]  
+  mutation_rate = c()
+  chunks = c(seq(from=1, to=nvariants,by = 10000), nvariants)
+  for(i in 2:length(chunks)){
+    ngt = rhdf5::h5read(h5f,ngt_path, index = list(NULL,chunks[i-1]:chunks[i]))      
+    mutated <- (ngt == 1 | ngt == 2)
+    mutation_rate <- c(mutation_rate,
+                       base::colMeans(mutated, na.rm = T))
+    if(!all.equal(c(0,1,2,3), sort(unique(c(ngt))))) stop('NGT layer can only contain 0, 1, 2, 3 values.')  
+  }
+  
   mutated_variants = which(mutation_rate > min_mutation_rate)
-  if(!all.equal(c(0,1,2,3), sort(unique(c(ngt))))) stop('NGT layer can only contain 0, 1, 2, 3 values.')
-  # mutation_rate = apply(ngt,2, FUN = function(x) {
-  #   sum(x %in% c(1,2)) / ncol(ngt)
-  # })
   
-  features =as_tibble(rhdf5::h5read(h5f,sprintf("row_attrs")))
-  features = validate_variant_annotations(features)
-  
+
   cell_annotations <- as_tibble(rhdf5::h5read(h5f,sprintf("col_attrs")))
   
   if(nrow(cell_annotations) ==0) {
@@ -45,14 +50,16 @@ read_loom <- function(filename, min_mutation_rate=0.05) {
   }
   cell_annotations <- validate_cell_annotations(cell_annotations = cell_annotations)  
 
-
-  filtered_features = features[mutated_variants,]
+  
+  all_features =as_tibble(rhdf5::h5read(h5f,sprintf("row_attrs")))
+  filtered_features = all_features[mutated_variants,]
+  filtered_features = validate_variant_annotations(filtered_features)
   
   assay = create_assay(assay_name = assay_name,
                        cell_annotations = cell_annotations,
                        feature_annotations = filtered_features)
   
-  filtered_ngt = ngt[,mutated_variants]
+  filtered_ngt = data = rhdf5::h5read(h5f,ngt_path, index = list(NULL,mutated_variants))
   colnames(filtered_ngt) <- filtered_features$id
   assay = add_data_layer(assay = assay,layer_name = 'NGT', data = filtered_ngt)
   
@@ -63,7 +70,7 @@ read_loom <- function(filename, min_mutation_rate=0.05) {
     
     #data = layers[[layer]][,mutated_variants]
     colnames(data) <- filtered_features$id
-    assay = add_data_layer(assay = assay,layer_name = layer, data = data)
+    assay = add_data_layer(assay = assay, layer_name = layer, data = data)
   }
   
   
@@ -85,7 +92,7 @@ read_loom <- function(filename, min_mutation_rate=0.05) {
 #' \dontrun{
 #' tapestri_raw = h5_reader(filename,min_mutation_rate = 0.1)
 #' }
-read_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
+read_assay_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
   
   #filename <- "~/Google Drive/launches/r_package/data/merged_all.h5"
   #assay_name='dna'
@@ -125,27 +132,18 @@ read_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
       stop(sprintf('H5 file does not seem to be a standard structure. Missing %s.', ngt_path))
     }
     
+    nvariants = object_str$rows[object_str$object_names == ngt_path]
     mutation_rate = c()
-    chunks = c(seq(from=1, to=object_str$rows[object_str$object_names == ngt_path],by = 10000), 
-               object_str$rows[object_str$object_names == ngt_path])
+    chunks = c(seq(from=1, to=nvariants,by = 10000),nvariants)
+    
     for(i in 2:length(chunks)){
-      ngt = rhdf5::h5read(h5f,ngt_path, index = list(chunks[i-1]:chunks[i],NULL))      
+      ngt = rhdf5::h5read(h5f,ngt_path, index = list(chunks[i-1]:chunks[i],NULL))
       mutated <- (ngt == 1 | ngt == 2)
       mutation_rate <- c(mutation_rate,
                          base::rowMeans(mutated, na.rm = T))
-      if(!all.equal(c(0,1,2,3), sort(unique(c(ngt))))) stop('NGT layer can only contain 0, 1, 2, 3 values.')  
+      if(!all.equal(c(0,1,2,3), sort(unique(c(ngt))))) stop('NGT layer can only contain 0, 1, 2, 3 values.')
     }
     filters = which(mutation_rate > min_mutation_rate)
-    
-    
-    
-    #### todo: faster way to filter large data
-    # mutation_rate = apply(ngt,1, FUN = function(x) {
-    #   sum(x %in% c(1,2)) / ncol(ngt)
-    # })
-    # 
-    #mutated <- (ngt == 1 | ngt == 2)
-    #rowMeans(mutated) * 100
     
     
   } else {
@@ -197,11 +195,11 @@ read_tap <- function(filename, experiment_name = NA) {
   object_str$columns = as.numeric(dims[,3])
   assay_names = h5ls(h5f&sprintf("/assays"), recursive = FALSE)
   
-  a = read_h5(filename = filename, assay_name = assay_names$name[1])
+  a = read_assay_h5(filename = filename, assay_name = assay_names$name[1])
   moo = create_moo(experiment_name = experiment_name, cell_annotations = a@cell_annotations)
   moo = add_assay(moo,a) 
   for(assay in assay_names$name[-1]) {
-    a = read_h5(filename = filename, assay_name = assay)
+    a = read_assay_h5(filename = filename, assay_name = assay)
     moo = add_assay(moo,a) 
   }
   return(moo)
@@ -295,7 +293,12 @@ validate_cell_annotations <- function(cell_annotations){
 validate_variant_annotations <- function(variant_annotations) {
   
   if(!'id' %in% colnames(variant_annotations)) stop('id column must exist.')
-  if(any(duplicated(variant_annotations$id))) stop('id column has duplicates.')
+  if(any(duplicated(variant_annotations$id))) {
+    warning("Duplicate variant ids present. You're likely likely running an older experiment. 
+            Don't worry we'll fix the duplicate issue here and new runs wont have this issue. ")
+    
+    variant_annotations = variant_annotations %>% distinct(id, .keep_all = TRUE)
+    }
   
   if(any(!c('CHROM','POS') %in% colnames(variant_annotations))){
     split_ids = stringr::str_match(variant_annotations$id,'(.*?):?chr(.*?):([[:digit:]]*):')
@@ -307,6 +310,4 @@ validate_variant_annotations <- function(variant_annotations) {
 
   return(variant_annotations)
 }
-
-
 
