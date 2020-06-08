@@ -9,10 +9,9 @@ editor_options:
   chunk_output_type: console
 vignette: >
   %\VignetteIndexEntry{Multi-Sample export from Insights}
-  \usepackage[utf8]{inputenc}
+  %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 ---
-
 
 ```{r load_libraries, message=FALSE, warning=FALSE, include=FALSE}
 
