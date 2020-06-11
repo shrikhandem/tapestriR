@@ -32,10 +32,7 @@ dim.Tapestri_Multiomics <- function(x) {
   c(nrow(x@cell_annotations))
 }
 
-#' get names of object
-#' 
-#' @param x Tapestri_Multiomics object
-#'
+
 #' @export
 #' @import methods
 #' @method names Tapestri_Multiomics

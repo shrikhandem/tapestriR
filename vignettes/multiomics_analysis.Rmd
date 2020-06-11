@@ -12,7 +12,6 @@ editor_options:
 
 vignette: >
   %\VignetteIndexEntry{Multi-omics Analysis}
-  \usepackage[utf8]{inputenc}
   %\VignetteEngine{knitr::rmarkdown}
 ---
 
@@ -24,18 +23,15 @@ knitr::opts_chunk$set(warning = FALSE)
 library(TapestriR)
 library(tidyverse)
 theme_set(theme_bw())
-library(plotly)
 library(patchwork)
 
-# protein normalization library
-#library(SciViews)
 
-packages <- c("factoextra",  "NbClust", 'scran', 'uwot','glmpca', 'ComplexHeatmap')
+packages <- c("factoextra",  "NbClust", 'uwot', 'ComplexHeatmap')
 
 for(i in 1:length(packages)) {
   package = packages[i]
   if (!requireNamespace(package, quietly = TRUE))
-    install.packages(package)
+    print(package) #install.packages(package)
 
   require(package=package, character.only=TRUE)
 }
@@ -230,15 +226,10 @@ clusters = list()
 
 #### do the clustering
 
-for(i in 2:5) {
+for(i in 2:10) {
   kmean_values <- kmeans(cluster_by, i ,iter.max=500)
   clusters[[paste0('umap.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
 }
-
-graph_values <- buildSNNGraph(t(cluster_by), k=150)
-louvain_clust <- igraph::cluster_louvain(graph_values)$membership
-
-clusters[['umap.louvain.cluster']] = as_factor(louvain_clust)
 
 #############
 ## Add cluster labels to analysis data structure
@@ -396,7 +387,7 @@ clustering by kmeans and louvain on umap projection and raw features
 
 #dimensional reduction using umap
 set.seed(111)
-umap_values <- umap(experiment$assays$protein$data_layers$normalized, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
+umap_values <- umap(experiment$assays$protein$data_layers$normalized, scale=TRUE, metric="euclidean", init="laplacian", pca=20) 
 
 umap_layer = tibble(    
       x = umap_values[,1],
@@ -406,23 +397,18 @@ umap_layer = tibble(
 experiment$assays$protein = add_analysis_layer(assay = experiment$assays$protein, layer_name = 'umap', umap_layer)
   
 # Hold all the different customer labels in a single structure
-cluster_by = experiment$assays$protein$analysis_layers$umap
+#cluster_by = experiment$assays$protein$analysis_layers$umap
+cluster_by = experiment$assays$protein$data_layers$normalized
+
 clusters = list()
 
 #### do the clustering
 
-for(i in 2:5) {
+for(i in 2:10) {
   kmean_values <- kmeans(cluster_by, i ,iter.max=500)
   clusters[[paste0('umap.kmean.cluster.',i)]] = as_factor(kmean_values$cluster)
 
 }
-
-graph_values <- buildSNNGraph(t(cluster_by), k=150)
-louvain_clust <- igraph::cluster_louvain(graph_values)$membership
-
-clusters[['umap.louvain.cluster']] = as_factor(louvain_clust)
-
-
 
 ## Add cluster labels to analysis data structure
 experiment$assays$protein = add_analysis_layer(assay = experiment$assays$protein, layer_name = 'clusters', as_tibble(clusters))
@@ -461,11 +447,11 @@ to do:
 p_umap  = tapestri_scatterplot(
                  x = experiment$assays$protein$analysis_layers$umap$x, 
                  y= experiment$assays$protein$analysis_layers$umap$y, 
-                 color_by = experiment$assays$protein$analysis_layers$clusters$umap.louvain.cluster) + 
+                 color_by = experiment$assays$protein$analysis_layers$clusters$umap.kmean.cluster.4) + 
   xlab('') + ylab('') + umap_theme() 
 
 p_violin = tapestri_violinplot(
-           clusters = experiment$assays$protein$analysis_layers$clusters$umap.louvain.cluster,
+           clusters = experiment$assays$protein$analysis_layers$clusters$umap.kmean.cluster.4,
            features = experiment$assays$protein$data_layers$normalized)
 
 p_umap / p_violin

@@ -170,7 +170,9 @@ add_data_layer<- function(assay, layer_name, data) {
 }
 
 
-#' Add additional layers of analysis to Tapestri_Assay Object. The function will check the new data has same number of cells
+#' Add additional layers of analysis to Tapestri_Assay Object. 
+#' 
+#' The function will check the new data has same number of cells
 #'
 #' @param assay Tapestri_Assay object to add data to
 #' @param layer_name name of layer

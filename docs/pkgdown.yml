@@ -4,6 +4,5 @@ pkgdown_sha: ~
 articles:
   loading_data: loading_data.html
   multiomics_analysis: multiomics_analysis.html
-  raji_k562_analysis: raji_k562_analysis.html
-last_built: 2020-06-08T15:25Z
+last_built: 2020-06-11T20:01Z
 

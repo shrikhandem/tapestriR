@@ -5,12 +5,14 @@ For additional documentation and tutorials visit: https://anupparikh.github.io/t
 
 # Installation
 
+**Not compatible with R >= 4.0.0.** Please use R 3.6.x. 
+
 1) Install `devtools` and `BiocManager`.
 2) Install `TaprestriR`. 
 3) Start with example_analysis.Rmd in the vignettes directory. 
 
 ```r
-install.packages(c("devtools","BiocManager"), repos='http://cran.us.r-project.org')
+install.packages(c("devtools","BiocManager"))
 BiocManager::install("rhdf5")
 devtools::install_github("anupparikh/tapestri_multiomics")
 require(TapestriR)

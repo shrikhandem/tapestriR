@@ -19,24 +19,19 @@ library(TapestriR)
 
 #packages needed for visualization 
 library(tidyverse)
-library(patchwork)
-
-
-#packages needed for analysis
-packages <- c("factoextra",  "NbClust", 'scran', 'uwot')
-
-for(i in 1:length(packages)) {
-  package = packages[i]
-  if (!requireNamespace(package, quietly = TRUE))
-    install.packages(package)
-
-  require(package=package, character.only=TRUE)
-}
 
 ```
 
+# Load data from various sources {.tabset}
 
-# Load from Loom
+Enable loading from various files. 
+
+* h5 is the future format for miltiomics and multisample 
+* loom is supported for DNA mutation only analysis
+* Insights export is supported for DNA only analysis
+
+
+## Load from Loom
 
 Work for DNA only. Only single sample, since loom files only contain 1 sample.  
 
@@ -51,40 +46,10 @@ vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
 vaf[is.na(vaf)] <- 0
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
-
+filtered_variants
 ```
 
-## Demension Reduction
-
-```{r}
-
-#dimensional reduction using umap
-set.seed(111)
-umap_values <- umap(filtered_variants$data_layers$VAF, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
-
-umap_layer = tibble(
-      x = umap_values[,1],
-      y = umap_values[,2]
-)
-
-filtered_variants = add_analysis_layer(assay = filtered_variants, layer_name = 'umap_vaf',data = umap_layer)
-
-
-```
-
-## Plot the data
-
-```{r}
-
-p = ggplot(filtered_variants@analysis_layers$umap_vaf)
-p = p + geom_point(aes(x = x, y = y), alpha = 0.5, size=0.8)
-p = p + theme_bw()
-p
-
-```
-
-
-# Load multiomics H5
+## Load multiomics H5
 
 Works for DNA, DNA + Protein data. Also works from multisample. best practice is to create a multiassay, multisample h5 in pipeline, and apply filters before loading into R. 
 
@@ -121,15 +86,16 @@ experiment$assays$protein = add_data_layer(experiment$assays$protein,'normalized
 normalized_dna_reads = normalize_dna_reads(experiment$assays$cnv$data_layers$read_counts)
 experiment$assays$cnv = add_data_layer(experiment$assays$cnv,'normalized',normalized_dna_reads)
 
+
+experiment
 ```
 
-# Load multiomics H5 one layer at a time
+## Create your own multiomics object
 
-In case you want to build a multiomics object from indivitual components, not using the `read_tap` function. 
+In case you want to build a multiomics object from individual components, not using the `read_tap` function. 
 
 ```{r load_data}
 ASSAY_NAME_VARIANT = 'dna'
-ASSAY_NAME_READ_COUNT = 'cnv'
 ASSAY_NAME_PROTEIN = 'protein'
 
 filename <- system.file("extdata", "ABseq021.h5", package = "TapestriR")
@@ -150,22 +116,16 @@ protein_counts_norm = protein@data_layers$read_counts %>% clr_by_feature() %>% a
 # add normalized data to protein assay
 protein = add_data_layer(protein,'normalized',protein_counts_norm)
 
-### load cnv assay 
-cnv = read_assay_h5(filename,assay_name = ASSAY_NAME_READ_COUNT)
-normalized_dna_reads = normalize_dna_reads(cnv$data_layers$read_counts)
-cnv = add_data_layer(cnv,'normalized',normalized_dna_reads)
-
 ### create multiomics object (moo)
 experiment = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
 experiment = add_assay(moo = experiment,assay = filtered_variants)
 
-experiment = add_assay(experiment,cnv,keep_common_cells = TRUE)
-
 experiment = add_assay(experiment,protein, keep_common_cells = TRUE)
 
+experiment
 ```
 
-## X-Y plots
+### X-Y plots
 
 1) select which proteins to plot on X and Y axis
 2) select set of other feature(s) to color the plot by. If you choose more then one feature, each feature will be plotted in a subplot
@@ -216,38 +176,8 @@ p
 
 ```
 
-## Demension Reduction
 
-```{r}
-
-### dimensional reduction using umap
-set.seed(111)
-umap_values <- umap(experiment$assays$dna$data_layers$VAF, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
-
-umap_layer = tibble(    
-      x = umap_values[,1],
-      y = umap_values[,2]
-)
-
-a = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'umap_vaf', umap_layer)
-
-experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'umap_vaf', umap_layer)
-
-```
-
-
-## Plot the data
-
-```{r}
-
-p = ggplot(experiment$assays$dna$analysis_layers$umap_vaf)
-p = p + geom_point(aes(x = x, y = y), alpha = 0.5, size=0.8)
-p
-
-```
-
-
-# Load data from Tapestri Insights Export
+## Load data from Tapestri Insights Export
 
 Work for DNA only. Export can be from a multisample project in Tapestri Insights. 
 usage:
@@ -264,6 +194,6 @@ export_dir <- system.file("extdata", "insights_2.2_export", package = "TapestriR
 dir(export_dir)
 variants = read_insights_export(export_dir = export_dir)
 
-
+variants
 ```
 

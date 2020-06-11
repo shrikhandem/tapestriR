@@ -2,7 +2,7 @@
 % Please edit documentation in R/Assay_object.R
 \name{add_analysis_layer}
 \alias{add_analysis_layer}
-\title{Add additional layers of analysis to Tapestri_Assay Object. The function will check the new data has same number of cells}
+\title{Add additional layers of analysis to Tapestri_Assay Object.}
 \usage{
 add_analysis_layer(assay, layer_name, data)
 }
@@ -17,5 +17,5 @@ add_analysis_layer(assay, layer_name, data)
 Tapestri_Assay Object
 }
 \description{
-Add additional layers of analysis to Tapestri_Assay Object. The function will check the new data has same number of cells
+The function will check the new data has same number of cells
 }

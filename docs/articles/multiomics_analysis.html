@@ -59,9 +59,6 @@
     <li>
       <a href="../articles/multiomics_analysis.html">Multi-omics Analysis</a>
     </li>
-    <li>
-      <a href="../articles/raji_k562_analysis.html">Multi-Sample export from Insights</a>
-    </li>
   </ul>
 </li>
       </ul>
@@ -299,15 +296,10 @@
 
 <span class="co">#### do the clustering</span>
 
-<span class="kw">for</span>(<span class="no">i</span> <span class="kw">in</span> <span class="fl">2</span>:<span class="fl">5</span>) {
+<span class="kw">for</span>(<span class="no">i</span> <span class="kw">in</span> <span class="fl">2</span>:<span class="fl">10</span>) {
   <span class="no">kmean_values</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html">kmeans</a></span>(<span class="no">cluster_by</span>, <span class="no">i</span> ,<span class="kw">iter.max</span><span class="kw">=</span><span class="fl">500</span>)
   <span class="no">clusters</span><span class="kw">[[</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'umap.kmean.cluster.'</span>,<span class="no">i</span>)]] <span class="kw">=</span> <span class="fu">as_factor</span>(<span class="no">kmean_values</span>$<span class="no">cluster</span>)
 }
-
-<span class="no">graph_values</span> <span class="kw">&lt;-</span> <span class="fu">buildSNNGraph</span>(<span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span>(<span class="no">cluster_by</span>), <span class="kw">k</span><span class="kw">=</span><span class="fl">150</span>)
-<span class="no">louvain_clust</span> <span class="kw">&lt;-</span> <span class="kw pkg">igraph</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/igraph/man/cluster_louvain.html">cluster_louvain</a></span>(<span class="no">graph_values</span>)$<span class="no">membership</span>
-
-<span class="no">clusters</span><span class="kw">[[</span><span class="st">'umap.louvain.cluster'</span>]] <span class="kw">=</span> <span class="fu">as_factor</span>(<span class="no">louvain_clust</span>)
 
 <span class="co">#############</span>
 <span class="co">## Add cluster labels to analysis data structure</span>
@@ -440,7 +432,7 @@
 <p>clustering by kmeans and louvain on umap projection and raw features</p>
 <div class="sourceCode" id="cb18"><html><body><pre class="r"><span class="co">#dimensional reduction using umap</span>
 <span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">111</span>)
-<span class="no">umap_values</span> <span class="kw">&lt;-</span> <span class="fu">umap</span>(<span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">data_layers</span>$<span class="no">normalized</span>, <span class="kw">scale</span><span class="kw">=</span><span class="fl">TRUE</span>, <span class="kw">metric</span><span class="kw">=</span><span class="st">"manhattan"</span>, <span class="kw">init</span><span class="kw">=</span><span class="st">"laplacian"</span>, <span class="kw">pca</span><span class="kw">=</span><span class="fl">20</span>)
+<span class="no">umap_values</span> <span class="kw">&lt;-</span> <span class="fu">umap</span>(<span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">data_layers</span>$<span class="no">normalized</span>, <span class="kw">scale</span><span class="kw">=</span><span class="fl">TRUE</span>, <span class="kw">metric</span><span class="kw">=</span><span class="st">"euclidean"</span>, <span class="kw">init</span><span class="kw">=</span><span class="st">"laplacian"</span>, <span class="kw">pca</span><span class="kw">=</span><span class="fl">20</span>)
 
 <span class="no">umap_layer</span> <span class="kw">=</span> <span class="fu">tibble</span>(
       <span class="kw">x</span> <span class="kw">=</span> <span class="no">umap_values</span>[,<span class="fl">1</span>],
@@ -450,23 +442,18 @@
 <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_analysis_layer.html">add_analysis_layer</a></span>(<span class="kw">assay</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>, <span class="kw">layer_name</span> <span class="kw">=</span> <span class="st">'umap'</span>, <span class="no">umap_layer</span>)
 
 <span class="co"># Hold all the different customer labels in a single structure</span>
-<span class="no">cluster_by</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">analysis_layers</span>$<span class="no">umap</span>
+<span class="co">#cluster_by = experiment$assays$protein$analysis_layers$umap</span>
+<span class="no">cluster_by</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">data_layers</span>$<span class="no">normalized</span>
+
 <span class="no">clusters</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>()
 
 <span class="co">#### do the clustering</span>
 
-<span class="kw">for</span>(<span class="no">i</span> <span class="kw">in</span> <span class="fl">2</span>:<span class="fl">5</span>) {
+<span class="kw">for</span>(<span class="no">i</span> <span class="kw">in</span> <span class="fl">2</span>:<span class="fl">10</span>) {
   <span class="no">kmean_values</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html">kmeans</a></span>(<span class="no">cluster_by</span>, <span class="no">i</span> ,<span class="kw">iter.max</span><span class="kw">=</span><span class="fl">500</span>)
   <span class="no">clusters</span><span class="kw">[[</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(<span class="st">'umap.kmean.cluster.'</span>,<span class="no">i</span>)]] <span class="kw">=</span> <span class="fu">as_factor</span>(<span class="no">kmean_values</span>$<span class="no">cluster</span>)
 
 }
-
-<span class="no">graph_values</span> <span class="kw">&lt;-</span> <span class="fu">buildSNNGraph</span>(<span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span>(<span class="no">cluster_by</span>), <span class="kw">k</span><span class="kw">=</span><span class="fl">150</span>)
-<span class="no">louvain_clust</span> <span class="kw">&lt;-</span> <span class="kw pkg">igraph</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/igraph/man/cluster_louvain.html">cluster_louvain</a></span>(<span class="no">graph_values</span>)$<span class="no">membership</span>
-
-<span class="no">clusters</span><span class="kw">[[</span><span class="st">'umap.louvain.cluster'</span>]] <span class="kw">=</span> <span class="fu">as_factor</span>(<span class="no">louvain_clust</span>)
-
-
 
 <span class="co">## Add cluster labels to analysis data structure</span>
 <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_analysis_layer.html">add_analysis_layer</a></span>(<span class="kw">assay</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>, <span class="kw">layer_name</span> <span class="kw">=</span> <span class="st">'clusters'</span>, <span class="fu">as_tibble</span>(<span class="no">clusters</span>))</pre></body></html></div>
@@ -496,11 +483,11 @@
 <div class="sourceCode" id="cb20"><html><body><pre class="r"><span class="no">p_umap</span>  <span class="kw">=</span> <span class="fu"><a href="../reference/tapestri_scatterplot.html">tapestri_scatterplot</a></span>(
                  <span class="kw">x</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">analysis_layers</span>$<span class="no">umap</span>$<span class="no">x</span>,
                  <span class="kw">y</span><span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">analysis_layers</span>$<span class="no">umap</span>$<span class="no">y</span>,
-                 <span class="kw">color_by</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">analysis_layers</span>$<span class="no">clusters</span>$<span class="no">umap.louvain.cluster</span>) +
+                 <span class="kw">color_by</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">analysis_layers</span>$<span class="no">clusters</span>$<span class="no">umap.kmean.cluster.4</span>) +
   <span class="fu">xlab</span>(<span class="st">''</span>) + <span class="fu">ylab</span>(<span class="st">''</span>) + <span class="fu"><a href="../reference/umap_theme.html">umap_theme</a></span>()
 
 <span class="no">p_violin</span> <span class="kw">=</span> <span class="fu"><a href="../reference/tapestri_violinplot.html">tapestri_violinplot</a></span>(
-           <span class="kw">clusters</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">analysis_layers</span>$<span class="no">clusters</span>$<span class="no">umap.louvain.cluster</span>,
+           <span class="kw">clusters</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">analysis_layers</span>$<span class="no">clusters</span>$<span class="no">umap.kmean.cluster.4</span>,
            <span class="kw">features</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">data_layers</span>$<span class="no">normalized</span>)
 
 <span class="no">p_umap</span> / <span class="no">p_violin</span></pre></body></html></div>
