@@ -523,7 +523,7 @@ Usage:
 cnv.mat = compute_ploidy(
   reads = experiment$assays$cnv$data_layers$normalized,
   clusters = experiment$assays$dna$analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4,
-  baseline_cluster = 1
+  baseline_cluster = 3
  )
 experiment$assays$cnv <- add_analysis_layer(assay = experiment$assays$cnv,layer_name = 'norm_to_baseline',data = cnv.mat)
 
