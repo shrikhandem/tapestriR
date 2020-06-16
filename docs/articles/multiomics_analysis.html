@@ -85,12 +85,6 @@
 
     
     
-<div id="introduction" class="section level1">
-<h1 class="hasAnchor">
-<a href="#introduction" class="anchor"></a>Introduction</h1>
-<p>Using the Mission Bio Tapestri Platform, reagents and the <em>tapestri</em> R package, we explore Single Nucleotide Variants (SNVs), protein expression and Copy Number Variations (CNVs), including loss of heterozygosity (LOH), which plays a large role in cancer evolution and contributes to cancer heterogeneity. More details can be found in the [Application Note] (<a href="https://missionbio.com/protein-reva-application-note-form/" class="uri">https://missionbio.com/protein-reva-application-note-form/</a>).</p>
-<p>The <em>tapestri</em> R package is an exploratory data analysis tool. Refer to the README.md file for instructions on how to install the <em>tapestri</em> R package.</p>
-</div>
 <div id="load-multiomics-h5" class="section level1">
 <h1 class="hasAnchor">
 <a href="#load-multiomics-h5" class="anchor"></a>Load multiomics H5</h1>
@@ -548,7 +542,7 @@
 <span class="no">cnv.mat</span> <span class="kw">=</span> <span class="fu"><a href="../reference/compute_ploidy.html">compute_ploidy</a></span>(
   <span class="kw">reads</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">cnv</span>$<span class="no">data_layers</span>$<span class="no">normalized</span>,
   <span class="kw">clusters</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">dna</span>$<span class="no">analysis_layers</span>$<span class="no">umap_vaf_clusters</span>$<span class="no">umap.kmean.cluster.4</span>,
-  <span class="kw">baseline_cluster</span> <span class="kw">=</span> <span class="fl">1</span>
+  <span class="kw">baseline_cluster</span> <span class="kw">=</span> <span class="fl">3</span>
  )
 <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">cnv</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/add_analysis_layer.html">add_analysis_layer</a></span>(<span class="kw">assay</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">cnv</span>,<span class="kw">layer_name</span> <span class="kw">=</span> <span class="st">'norm_to_baseline'</span>,<span class="kw">data</span> <span class="kw">=</span> <span class="no">cnv.mat</span>)</pre></body></html></div>
 </div>
