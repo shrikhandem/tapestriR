@@ -17,7 +17,7 @@ vignette: >
 
 library(TapestriR)
 
-#packages needed for visualization 
+# Packages needed for visualization 
 library(tidyverse)
 
 ```
@@ -26,14 +26,14 @@ library(tidyverse)
 
 Enable loading from various files. 
 
-* h5 is the future format for miltiomics and multisample 
-* loom is supported for DNA mutation only analysis
-* Insights export is supported for DNA only analysis
+* H5 is the future format for multi-omics and multi-samples, supporting DNA and DNA + Protein analysis. 
+* Loom supports only DNA mutation analysis.
+* Insights export only supports DNA analysis.
 
 
 ## Load from Loom
 
-Work for DNA only. Only single sample, since loom files only contain 1 sample.  
+Works only for DNA and single samples since loom files only contain 1 sample.  
 
 ```{r load_loom, cache=TRUE}
 
@@ -49,37 +49,34 @@ filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 filtered_variants
 ```
 
-## Load multiomics H5
+## Load multi-omics H5
 
-Works for DNA, DNA + Protein data. Also works from multisample. best practice is to create a multiassay, multisample h5 in pipeline, and apply filters before loading into R. 
+Works for DNA and DNA + Protein data. Also works for multi-sample. Best practice is to create a multi-assay, multi-sample h5 in Pipeline, and apply filters before loading into R. 
 
-usage:
-
-1) Load variant assay and filter 
-2) Load Protein assay and normalize
-3) Load DNA read counts
-4) create a multiomics object and merge all 3 assays. This will make sure each assay has the same cells. 
+Usage:
+* Load multi-sample multi-omic h5 file
+* Filter and normalize assays  
 
 
 ```{r load_h5}
 
 
-filename <- system.file("extdata", "ABseq021.h5", package = "TapestriR")
+filename <- system.file("extdata", "4_cell_line_mix_dna_protein.h5", package = "TapestriR")
 
 experiment = read_tap(filename)
 
-# ideally would just start by loading filtered H5, but for now will load data with some basic filters
+# Ideally, we would start by loading a filtered H5, but for now, we will load data with some basic filters.
 filtered_variants = filter_variants(experiment$assays$dna)
 vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
 vaf[is.na(vaf)] <- 0
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
-#add the filtered data back to experiment, this will subset the rest of the assays to make sure we have same cells
+# Add the filtered data back to the experiment. This will be a subset of the rest of the assays to ensure that we have the same cells.
 experiment = add_assay(experiment,filtered_variants, keep_common_cells = TRUE)
 
-# normalize using clr method
+# Normalize using the clr method.
 protein_counts_norm = experiment$assays$protein$data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
-# add normalized data to protein assay
+# Add normalized data to the protein assay.
 experiment$assays$protein = add_data_layer(experiment$assays$protein,'normalized',protein_counts_norm)
 
 
@@ -92,15 +89,21 @@ experiment
 
 ## Create your own multiomics object
 
-In case you want to build a multiomics object from individual components, not using the `read_tap` function. 
+Build a multiomics object from individual components instead of using the `read_tap` function. 
+
+* Load variant assay and filter. 
+* Load Protein assay and normalize.
+* Load DNA read counts.
+* Create a multiomics object and merge all 3 assays. This will ensure each assay has the same cells. 
+
 
 ```{r load_data}
 ASSAY_NAME_VARIANT = 'dna'
 ASSAY_NAME_PROTEIN = 'protein'
 
-filename <- system.file("extdata", "ABseq021.h5", package = "TapestriR")
+filename <- system.file("extdata", "4_cell_line_mix_dna_protein.h5", package = "TapestriR")
 
-# ideally would just start by loading filtered H5, but for now will send filtering list to function to mimic
+# Ideally, we would start by loading a filtered H5, but for now, we will send a filtering list to the function to mimic it.
 variants = read_assay_h5(filename = filename, assay_name = ASSAY_NAME_VARIANT, min_mutation_rate = 0.005)
 
 filtered_variants = filter_variants(variants)
@@ -109,14 +112,14 @@ vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
 vaf[is.na(vaf)] <- 0
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
-### load protein assay and normalize
+# Load the protein assay and normalize.
 protein = read_assay_h5(filename = filename, assay_name = ASSAY_NAME_PROTEIN)
-# normalize using clr method
+# Normalize using the clr method.
 protein_counts_norm = protein@data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
-# add normalized data to protein assay
+# Add normalized data to the protein assay.
 protein = add_data_layer(protein,'normalized',protein_counts_norm)
 
-### create multiomics object (moo)
+# Create a multiomics object (moo).
 experiment = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
 experiment = add_assay(moo = experiment,assay = filtered_variants)
 
@@ -127,35 +130,35 @@ experiment
 
 ### X-Y plots
 
-1) select which proteins to plot on X and Y axis
-2) select set of other feature(s) to color the plot by. If you choose more then one feature, each feature will be plotted in a subplot
+1) Select the proteins to plot on the X and Y axes.
+2) Select a set of other feature(s) to color the plot by. If you choose more than one feature, each feature will be plotted in a subplot.
 
 ```{r fig.width = 12, fig.height = 8}
 
 
 ##################
-# select the Proteins to plot on X and Y
+# Select the proteins to plot on X and Y.
 ##################
 
-#protein_x = 'CD34'
-#protein_y = 'CD38'
+# protein_x = 'CD34'
+# protein_y = 'CD38'
 
 protein_x = 1
 protein_y = 2
 
 ##################
-# select 1 or more features to color by
-# color_by should be a vector of column header you want to color by
+# Select 1 or more features to color by.
+# color_by should be a vector of the column header you want to color by.
 ##################
 
-#all proteins
+# All proteins
 color_by = experiment$assays$protein$data_layers$normalized
 
-#select a few proteins
-#color_by =  experiment$assays$protein$data_layers$normalized %>% select('CD110','CD117')
+# Select a few proteins.
+# color_by =  experiment$assays$protein$data_layers$normalized %>% select('CD110','CD117')
 
-#select a few variant
-#color_by =  experiment$assays$dna$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+# Select a few variants.
+# color_by =  experiment$assays$dna$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
 
 
 p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[protein_x]], 
@@ -164,7 +167,7 @@ p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[
 p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Protein Expression')
 p
 
-#select a few variant
+# Select a few variants.
 color_by =  experiment$assays$dna$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
 
 
@@ -177,20 +180,20 @@ p
 ```
 
 
-## Load data from Tapestri Insights Export
+## Load the data from Tapestri Insights export
 
-Work for DNA only. Export can be from a multisample project in Tapestri Insights. 
-usage:
+Works for DNA only. Export can be from a multi-sample project in Tapestri Insights. 
 
-1) extract exported zip file
-2) read the `NGT.csv` and `Variants.csv` files
-3) create new `Tapestri_Assay` object
+Usage:
+
+* Extract the exported zip file.
+* Read directory to create a new `Tapestri_Assay` object.
 
 ```{r}
 
 export_dir <- system.file("extdata", "insights_2.2_export", package = "TapestriR")
 
-#show files
+# Show files
 dir(export_dir)
 variants = read_insights_export(export_dir = export_dir)
 

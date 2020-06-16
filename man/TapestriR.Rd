@@ -5,5 +5,5 @@
 \alias{TapestriR}
 \title{CNV analysis of Tapestri data}
 \description{
-See vignette and package manual for details on how to use this package.
+See the vignettes and package manual for details on how to use this package.
 }

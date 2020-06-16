@@ -120,11 +120,11 @@ create_assay<- function(assay_name, cell_annotations, feature_annotations) {
   }
   
   if(!'sample' %in% colnames(cell_annotations)) {
-    stop('sample column must exist cell_annotations')
+    stop('Sample column must exist in cell_annotations.')
   }
 
   if(!'barcode' %in% colnames(cell_annotations)) {
-    stop('barcode column must exist cell_annotations')
+    stop('Barcode column must exist in cell_annotations.')
   }
   metadata = list()
   metadata[['cell_info']] = cell_annotations %>% group_by(sample) %>% summarise(cells=n())
@@ -154,11 +154,11 @@ add_data_layer<- function(assay, layer_name, data) {
   new_feature_names = as.character(colnames(data))
   col_check = all.equal(current_feature_names, new_feature_names)
   if (col_check != TRUE) {
-    stop(sprintf('New feature does not have same column names.\n%s', col_check))
+    stop(sprintf('New feature does not have the same column names.\n%s', col_check))
   }
   dim_check = all.equal(dim(data), dim(assay))
   if(dim_check !=TRUE){
-    stop(sprintf('Demension of new data layer must be the same as current layers.\n%s', dim_check))
+    stop(sprintf('Dimensions of the new data layer must be the same as the current layers.\n%s', dim_check))
   }
   
   # suppressWarnings(
@@ -186,7 +186,7 @@ add_analysis_layer<- function(assay, layer_name, data) {
   data = as_tibble(data)
   
   if(nrow(assay) != nrow(data)){
-    stop(paste0("analysis layer must have same number or rows (cells) as assay."))
+    stop(paste0("Analysis layer must have the same number of rows (cells) as the assay."))
   }
   
   assay@analysis_layers[[layer_name]] = data
@@ -208,14 +208,14 @@ subset_assay<- function(assay, keep_cell_ids=TRUE, keep_feature_ids = TRUE) {
   
   if (length(keep_cell_ids) > 1) {
     cell_ind = match(keep_cell_ids, assay@cell_annotations$id)
-    if (any(is.na(cell_ind))) stop('cell ids to keep dont exist in assay.')
+    if (any(is.na(cell_ind))) stop('Cell ids to keep do not exist in the assay.')
   } else if(keep_cell_ids==TRUE) {
     cell_ind = 1:nrow(assay@cell_annotations)
   }
 
   if (length(keep_feature_ids) > 1) {
     feature_ind = match(keep_feature_ids, assay@feature_annotations$id)
-    if (any(is.na(cell_ind))) stop('features to keep dont exist in assay.')
+    if (any(is.na(cell_ind))) stop('Features to keep do not exist in the assay.')
   } else if(keep_feature_ids==TRUE) {
     feature_ind = 1:nrow(assay@feature_annotations)
   }

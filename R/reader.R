@@ -274,7 +274,7 @@ validate_cell_annotations <- function(cell_annotations){
   if(!'id' %in% colnames(cell_annotations)){
     cell_annotations = cell_annotations %>% mutate(id=paste0(sample,'-',barcode))
   } else if (any(duplicated(cell_annotations$id))) {
-    stop('cell annotations id must be unique.')
+    stop('Cell annotations id must be unique.')
   }
 
   return(cell_annotations)
@@ -294,8 +294,8 @@ validate_variant_annotations <- function(variant_annotations) {
   
   if(!'id' %in% colnames(variant_annotations)) stop('id column must exist.')
   if(any(duplicated(variant_annotations$id))) {
-    warning("Duplicate variant ids present. You're likely likely running an older experiment. 
-            Don't worry we'll fix the duplicate issue here and new runs wont have this issue. ")
+    warning("Duplicate variant ids present. You're likely running an older experiment. 
+            Don't worry. We'll fix the duplicate issue here, and new runs will not have this issue.")
     
     variant_annotations = variant_annotations %>% distinct(id, .keep_all = TRUE)
     }

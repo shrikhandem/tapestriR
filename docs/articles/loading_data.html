@@ -57,7 +57,7 @@
       <a href="../articles/loading_data.html">Loading Tapestri Data</a>
     </li>
     <li>
-      <a href="../articles/multiomics_analysis.html">Multi-omics Analysis</a>
+      <a href="../articles/multiomics_analysis.html">Multi-Omics Analysis</a>
     </li>
   </ul>
 </li>
@@ -90,20 +90,20 @@
 <a href="#load-data-from-various-sources" class="anchor"></a>Load data from various sources</h1>
 <p>Enable loading from various files.</p>
 <ul>
-<li>h5 is the future format for miltiomics and multisample</li>
-<li>loom is supported for DNA mutation only analysis</li>
-<li>Insights export is supported for DNA only analysis</li>
+<li>H5 is the future format for multi-omics and multi-samples, supporting DNA and DNA + Protein analysis.</li>
+<li>Loom supports only DNA mutation analysis.</li>
+<li>Insights export only supports DNA analysis.</li>
 </ul>
 <div id="load-from-loom" class="section level2">
 <h2 class="hasAnchor">
 <a href="#load-from-loom" class="anchor"></a>Load from Loom</h2>
-<p>Work for DNA only. Only single sample, since loom files only contain 1 sample.</p>
+<p>Works only for DNA and single samples since loom files only contain 1 sample.</p>
 <div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="no">filename</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata"</span>, <span class="st">"PE11.cells.loom"</span>, <span class="kw">package</span> <span class="kw">=</span> <span class="st">"TapestriR"</span>)
 
 <span class="no">variants</span> <span class="kw">=</span> <span class="fu"><a href="../reference/read_loom.html">read_loom</a></span>(<span class="no">filename</span>,<span class="kw">min_mutation_rate</span> <span class="kw">=</span> <span class="fl">0.05</span>)
 
 <span class="no">filtered_variants</span> <span class="kw">=</span> <span class="fu"><a href="../reference/filter_variants.html">filter_variants</a></span>(<span class="no">variants</span>)</pre></body></html></div>
-<pre><code>## Warning in filter_variants(variants): this method will not return identical
+<pre><code>## Warning in filter_variants(variants): This method will not return identical
 ## results to Tapestri Insights. Export filtered results from Tapestri Insights or
 ## use the Tapestri SDK to filter before importing into R.</code></pre>
 <div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">vaf</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span>(<span class="no">filtered_variants</span>@<span class="kw">data_layers</span>$<span class="no">AD</span>/<span class="no">filtered_variants</span>@<span class="kw">data_layers</span>$<span class="no">DP</span>, <span class="fl">3</span>)
@@ -126,36 +126,30 @@
 ##   .. ..$ VAF: tibble [5,043 × 8] (S3: tbl_df/tbl/data.frame)
 ##   ..@ analysis_layers    : list()</code></pre>
 </div>
-<div id="load-multiomics-h5" class="section level2">
+<div id="load-multi-omics-h5" class="section level2">
 <h2 class="hasAnchor">
-<a href="#load-multiomics-h5" class="anchor"></a>Load multiomics H5</h2>
-<p>Works for DNA, DNA + Protein data. Also works from multisample. best practice is to create a multiassay, multisample h5 in pipeline, and apply filters before loading into R.</p>
-<p>usage:</p>
-<ol style="list-style-type: decimal">
-<li>Load variant assay and filter</li>
-<li>Load Protein assay and normalize</li>
-<li>Load DNA read counts</li>
-<li>create a multiomics object and merge all 3 assays. This will make sure each assay has the same cells.</li>
-</ol>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">filename</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata"</span>, <span class="st">"ABseq021.h5"</span>, <span class="kw">package</span> <span class="kw">=</span> <span class="st">"TapestriR"</span>)
+<a href="#load-multi-omics-h5" class="anchor"></a>Load multi-omics H5</h2>
+<p>Works for DNA and DNA + Protein data. Also works for multi-sample. Best practice is to create a multi-assay, multi-sample h5 in Pipeline, and apply filters before loading into R.</p>
+<p>Usage: * Load multi-sample multi-omic h5 file * Filter and normalize assays</p>
+<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">filename</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata"</span>, <span class="st">"4_cell_line_mix_dna_protein.h5"</span>, <span class="kw">package</span> <span class="kw">=</span> <span class="st">"TapestriR"</span>)
 
 <span class="no">experiment</span> <span class="kw">=</span> <span class="fu"><a href="../reference/read_tap.html">read_tap</a></span>(<span class="no">filename</span>)
 
-<span class="co"># ideally would just start by loading filtered H5, but for now will load data with some basic filters</span>
+<span class="co"># Ideally, we would start by loading a filtered H5, but for now, we will load data with some basic filters.</span>
 <span class="no">filtered_variants</span> <span class="kw">=</span> <span class="fu"><a href="../reference/filter_variants.html">filter_variants</a></span>(<span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">dna</span>)</pre></body></html></div>
-<pre><code>## Warning in filter_variants(experiment$assays$dna): this method will not return
+<pre><code>## Warning in filter_variants(experiment$assays$dna): This method will not return
 ## identical results to Tapestri Insights. Export filtered results from Tapestri
 ## Insights or use the Tapestri SDK to filter before importing into R.</code></pre>
 <div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="no">vaf</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span>(<span class="no">filtered_variants</span>@<span class="kw">data_layers</span>$<span class="no">AD</span>/<span class="no">filtered_variants</span>@<span class="kw">data_layers</span>$<span class="no">DP</span>, <span class="fl">3</span>)
 <span class="no">vaf</span>[<span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span>(<span class="no">vaf</span>)] <span class="kw">&lt;-</span> <span class="fl">0</span>
 <span class="no">filtered_variants</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_data_layer.html">add_data_layer</a></span>(<span class="no">filtered_variants</span>,<span class="st">'VAF'</span>,<span class="no">vaf</span>)
 
-<span class="co">#add the filtered data back to experiment, this will subset the rest of the assays to make sure we have same cells</span>
+<span class="co"># Add the filtered data back to the experiment. This will be a subset of the rest of the assays to ensure that we have the same cells.</span>
 <span class="no">experiment</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_assay.html">add_assay</a></span>(<span class="no">experiment</span>,<span class="no">filtered_variants</span>, <span class="kw">keep_common_cells</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 
-<span class="co"># normalize using clr method</span>
+<span class="co"># Normalize using the clr method.</span>
 <span class="no">protein_counts_norm</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">data_layers</span>$<span class="no">read_counts</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="../reference/clr_by_feature.html">clr_by_feature</a></span>() <span class="kw">%&gt;%</span> <span class="fu">as_tibble</span>(<span class="kw">rownames</span> <span class="kw">=</span> <span class="fl">NA</span>)
-<span class="co"># add normalized data to protein assay</span>
+<span class="co"># Add normalized data to the protein assay.</span>
 <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_data_layer.html">add_data_layer</a></span>(<span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>,<span class="st">'normalized'</span>,<span class="no">protein_counts_norm</span>)
 
 
@@ -164,110 +158,116 @@
 
 
 <span class="no">experiment</span></pre></body></html></div>
-<pre><code>## Experiment: ABseq021.h5
-## Num Cells: 1197
+<pre><code>## Experiment: 4_cell_line_mix_dna_protein.h5
+## Num Cells: 1206
 ## Formal class 'Tapestri_Assay' [package "TapestriR"] with 6 slots
 ##   ..@ assay_name         : chr "cnv"
 ##   ..@ metadata           :List of 1
-##   ..@ feature_annotations: tibble [138 × 1] (S3: tbl_df/tbl/data.frame)
-##   ..@ cell_annotations   : tibble [1,197 × 3] (S3: tbl_df/tbl/data.frame)
+##   ..@ feature_annotations: tibble [127 × 4] (S3: tbl_df/tbl/data.frame)
+##   ..@ cell_annotations   : tibble [1,206 × 3] (S3: tbl_df/tbl/data.frame)
 ##   ..@ data_layers        :List of 2
 ##   ..@ analysis_layers    : list()
 ## Formal class 'Tapestri_Assay' [package "TapestriR"] with 6 slots
 ##   ..@ assay_name         : chr "dna"
 ##   ..@ metadata           :List of 1
-##   ..@ feature_annotations: tibble [49 × 6] (S3: tbl_df/tbl/data.frame)
-##   ..@ cell_annotations   : tibble [1,197 × 3] (S3: tbl_df/tbl/data.frame)
+##   ..@ feature_annotations: tibble [43 × 9] (S3: tbl_df/tbl/data.frame)
+##   ..@ cell_annotations   : tibble [1,206 × 3] (S3: tbl_df/tbl/data.frame)
 ##   ..@ data_layers        :List of 6
 ##   ..@ analysis_layers    : list()
 ## Formal class 'Tapestri_Assay' [package "TapestriR"] with 6 slots
 ##   ..@ assay_name         : chr "protein"
 ##   ..@ metadata           :List of 1
 ##   ..@ feature_annotations: tibble [10 × 1] (S3: tbl_df/tbl/data.frame)
-##   ..@ cell_annotations   : tibble [1,197 × 3] (S3: tbl_df/tbl/data.frame)
+##   ..@ cell_annotations   : tibble [1,206 × 3] (S3: tbl_df/tbl/data.frame)
 ##   ..@ data_layers        :List of 2
 ##   ..@ analysis_layers    : list()</code></pre>
 </div>
 <div id="create-your-own-multiomics-object" class="section level2">
 <h2 class="hasAnchor">
 <a href="#create-your-own-multiomics-object" class="anchor"></a>Create your own multiomics object</h2>
-<p>In case you want to build a multiomics object from individual components, not using the <code>read_tap</code> function.</p>
+<p>Build a multiomics object from individual components instead of using the <code>read_tap</code> function.</p>
+<ul>
+<li>Load variant assay and filter.</li>
+<li>Load Protein assay and normalize.</li>
+<li>Load DNA read counts.</li>
+<li>Create a multiomics object and merge all 3 assays. This will ensure each assay has the same cells.</li>
+</ul>
 <div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="no">ASSAY_NAME_VARIANT</span> <span class="kw">=</span> <span class="st">'dna'</span>
 <span class="no">ASSAY_NAME_PROTEIN</span> <span class="kw">=</span> <span class="st">'protein'</span>
 
-<span class="no">filename</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata"</span>, <span class="st">"ABseq021.h5"</span>, <span class="kw">package</span> <span class="kw">=</span> <span class="st">"TapestriR"</span>)
+<span class="no">filename</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata"</span>, <span class="st">"4_cell_line_mix_dna_protein.h5"</span>, <span class="kw">package</span> <span class="kw">=</span> <span class="st">"TapestriR"</span>)
 
-<span class="co"># ideally would just start by loading filtered H5, but for now will send filtering list to function to mimic</span>
+<span class="co"># Ideally, we would start by loading a filtered H5, but for now, we will send a filtering list to the function to mimic it.</span>
 <span class="no">variants</span> <span class="kw">=</span> <span class="fu"><a href="../reference/read_assay_h5.html">read_assay_h5</a></span>(<span class="kw">filename</span> <span class="kw">=</span> <span class="no">filename</span>, <span class="kw">assay_name</span> <span class="kw">=</span> <span class="no">ASSAY_NAME_VARIANT</span>, <span class="kw">min_mutation_rate</span> <span class="kw">=</span> <span class="fl">0.005</span>)
 
 <span class="no">filtered_variants</span> <span class="kw">=</span> <span class="fu"><a href="../reference/filter_variants.html">filter_variants</a></span>(<span class="no">variants</span>)</pre></body></html></div>
-<pre><code>## Warning in filter_variants(variants): this method will not return identical
+<pre><code>## Warning in filter_variants(variants): This method will not return identical
 ## results to Tapestri Insights. Export filtered results from Tapestri Insights or
 ## use the Tapestri SDK to filter before importing into R.</code></pre>
 <div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="no">vaf</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span>(<span class="no">filtered_variants</span>@<span class="kw">data_layers</span>$<span class="no">AD</span>/<span class="no">filtered_variants</span>@<span class="kw">data_layers</span>$<span class="no">DP</span>, <span class="fl">3</span>)
 <span class="no">vaf</span>[<span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span>(<span class="no">vaf</span>)] <span class="kw">&lt;-</span> <span class="fl">0</span>
 <span class="no">filtered_variants</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_data_layer.html">add_data_layer</a></span>(<span class="no">filtered_variants</span>,<span class="st">'VAF'</span>,<span class="no">vaf</span>)
 
-<span class="co">### load protein assay and normalize</span>
+<span class="co"># Load the protein assay and normalize.</span>
 <span class="no">protein</span> <span class="kw">=</span> <span class="fu"><a href="../reference/read_assay_h5.html">read_assay_h5</a></span>(<span class="kw">filename</span> <span class="kw">=</span> <span class="no">filename</span>, <span class="kw">assay_name</span> <span class="kw">=</span> <span class="no">ASSAY_NAME_PROTEIN</span>)
-<span class="co"># normalize using clr method</span>
+<span class="co"># Normalize using the clr method.</span>
 <span class="no">protein_counts_norm</span> <span class="kw">=</span> <span class="no">protein</span>@<span class="kw">data_layers</span>$<span class="no">read_counts</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="../reference/clr_by_feature.html">clr_by_feature</a></span>() <span class="kw">%&gt;%</span> <span class="fu">as_tibble</span>(<span class="kw">rownames</span> <span class="kw">=</span> <span class="fl">NA</span>)
-<span class="co"># add normalized data to protein assay</span>
+<span class="co"># Add normalized data to the protein assay.</span>
 <span class="no">protein</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_data_layer.html">add_data_layer</a></span>(<span class="no">protein</span>,<span class="st">'normalized'</span>,<span class="no">protein_counts_norm</span>)
 
-<span class="co">### create multiomics object (moo)</span>
+<span class="co"># Create a multiomics object (moo).</span>
 <span class="no">experiment</span> <span class="kw">=</span> <span class="fu"><a href="../reference/create_moo.html">create_moo</a></span>(<span class="kw">experiment_name</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/basename.html">basename</a></span>(<span class="no">filename</span>), <span class="kw">cell_annotations</span> <span class="kw">=</span> <span class="no">filtered_variants</span>@<span class="kw">cell_annotations</span>)
 <span class="no">experiment</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_assay.html">add_assay</a></span>(<span class="kw">moo</span> <span class="kw">=</span> <span class="no">experiment</span>,<span class="kw">assay</span> <span class="kw">=</span> <span class="no">filtered_variants</span>)
 
 <span class="no">experiment</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_assay.html">add_assay</a></span>(<span class="no">experiment</span>,<span class="no">protein</span>, <span class="kw">keep_common_cells</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 
 <span class="no">experiment</span></pre></body></html></div>
-<pre><code>## Experiment: ABseq021.h5
-## Num Cells: 1198
+<pre><code>## Experiment: 4_cell_line_mix_dna_protein.h5
+## Num Cells: 1233
 ## Formal class 'Tapestri_Assay' [package "TapestriR"] with 6 slots
 ##   ..@ assay_name         : chr "dna"
 ##   ..@ metadata           :List of 1
-##   ..@ feature_annotations: tibble [49 × 6] (S3: tbl_df/tbl/data.frame)
-##   ..@ cell_annotations   : tibble [1,198 × 3] (S3: tbl_df/tbl/data.frame)
+##   ..@ feature_annotations: tibble [43 × 9] (S3: tbl_df/tbl/data.frame)
+##   ..@ cell_annotations   : tibble [1,233 × 3] (S3: tbl_df/tbl/data.frame)
 ##   ..@ data_layers        :List of 6
 ##   ..@ analysis_layers    : list()
 ## Formal class 'Tapestri_Assay' [package "TapestriR"] with 6 slots
 ##   ..@ assay_name         : chr "protein"
 ##   ..@ metadata           :List of 1
 ##   ..@ feature_annotations: tibble [10 × 1] (S3: tbl_df/tbl/data.frame)
-##   ..@ cell_annotations   : tibble [1,198 × 3] (S3: tbl_df/tbl/data.frame)
+##   ..@ cell_annotations   : tibble [1,233 × 3] (S3: tbl_df/tbl/data.frame)
 ##   ..@ data_layers        :List of 2
 ##   ..@ analysis_layers    : list()</code></pre>
 <div id="x-y-plots" class="section level3">
 <h3 class="hasAnchor">
 <a href="#x-y-plots" class="anchor"></a>X-Y plots</h3>
 <ol style="list-style-type: decimal">
-<li>select which proteins to plot on X and Y axis</li>
-<li>select set of other feature(s) to color the plot by. If you choose more then one feature, each feature will be plotted in a subplot</li>
+<li>Select the proteins to plot on the X and Y axes.</li>
+<li>Select a set of other feature(s) to color the plot by. If you choose more than one feature, each feature will be plotted in a subplot.</li>
 </ol>
 <div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="co">##################</span>
-<span class="co"># select the Proteins to plot on X and Y</span>
+<span class="co"># Select the proteins to plot on X and Y.</span>
 <span class="co">##################</span>
 
-<span class="co">#protein_x = 'CD34'</span>
-<span class="co">#protein_y = 'CD38'</span>
+<span class="co"># protein_x = 'CD34'</span>
+<span class="co"># protein_y = 'CD38'</span>
 
 <span class="no">protein_x</span> <span class="kw">=</span> <span class="fl">1</span>
 <span class="no">protein_y</span> <span class="kw">=</span> <span class="fl">2</span>
 
 <span class="co">##################</span>
-<span class="co"># select 1 or more features to color by</span>
-<span class="co"># color_by should be a vector of column header you want to color by</span>
+<span class="co"># Select 1 or more features to color by.</span>
+<span class="co"># color_by should be a vector of the column header you want to color by.</span>
 <span class="co">##################</span>
 
-<span class="co">#all proteins</span>
+<span class="co"># All proteins</span>
 <span class="no">color_by</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">data_layers</span>$<span class="no">normalized</span>
 
-<span class="co">#select a few proteins</span>
-<span class="co">#color_by =  experiment$assays$protein$data_layers$normalized %&gt;% select('CD110','CD117')</span>
+<span class="co"># Select a few proteins.</span>
+<span class="co"># color_by =  experiment$assays$protein$data_layers$normalized %&gt;% select('CD110','CD117')</span>
 
-<span class="co">#select a few variant</span>
-<span class="co">#color_by =  experiment$assays$dna$data_layers$NGT %&gt;% select(1:10) %&gt;% mutate_all(as_factor) %&gt;% mutate_all(recode_genotypes)</span>
+<span class="co"># Select a few variants.</span>
+<span class="co"># color_by =  experiment$assays$dna$data_layers$NGT %&gt;% select(1:10) %&gt;% mutate_all(as_factor) %&gt;% mutate_all(recode_genotypes)</span>
 
 
 <span class="no">p</span>  <span class="kw">=</span> <span class="fu"><a href="../reference/tapestri_scatterplot.html">tapestri_scatterplot</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">data_layers</span>$<span class="no">normalized</span><span class="kw">[[</span><span class="no">protein_x</span>]],
@@ -276,12 +276,11 @@
 <span class="no">p</span> <span class="kw">=</span> <span class="no">p</span> + <span class="fu">xlab</span>(<span class="no">protein_x</span>) + <span class="fu">ylab</span>(<span class="no">protein_y</span>) + <span class="fu">ggtitle</span>(<span class="st">'Color by Protein Expression'</span>)
 <span class="no">p</span></pre></body></html></div>
 <p><img src="loading_data_files/figure-html/unnamed-chunk-2-1.png" width="1152"></p>
-<div class="sourceCode" id="cb14"><html><body><pre class="r"><span class="co">#select a few variant</span>
-<span class="no">color_by</span> <span class="kw">=</span>  <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">dna</span>$<span class="no">data_layers</span>$<span class="no">NGT</span> <span class="kw">%&gt;%</span> <span class="fu">select</span>(<span class="fl">1</span>:<span class="fl">10</span>) <span class="kw">%&gt;%</span> <span class="fu">mutate_all</span>(<span class="no">as_factor</span>) <span class="kw">%&gt;%</span> <span class="fu">mutate_all</span>(<span class="no">recode_genotypes</span>)</pre></body></html></div>
-<pre><code>## Warning: Unknown levels in `f`: 2</code></pre>
-<pre><code>## Warning: Unknown levels in `f`: 3</code></pre>
-<pre><code>## Warning: Unknown levels in `f`: 2</code></pre>
-<div class="sourceCode" id="cb18"><html><body><pre class="r"><span class="no">p</span>  <span class="kw">=</span> <span class="fu"><a href="../reference/tapestri_scatterplot.html">tapestri_scatterplot</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">data_layers</span>$<span class="no">normalized</span><span class="kw">[[</span><span class="no">protein_x</span>]],
+<div class="sourceCode" id="cb14"><html><body><pre class="r"><span class="co"># Select a few variants.</span>
+<span class="no">color_by</span> <span class="kw">=</span>  <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">dna</span>$<span class="no">data_layers</span>$<span class="no">NGT</span> <span class="kw">%&gt;%</span> <span class="fu">select</span>(<span class="fl">1</span>:<span class="fl">10</span>) <span class="kw">%&gt;%</span> <span class="fu">mutate_all</span>(<span class="no">as_factor</span>) <span class="kw">%&gt;%</span> <span class="fu">mutate_all</span>(<span class="no">recode_genotypes</span>)
+
+
+<span class="no">p</span>  <span class="kw">=</span> <span class="fu"><a href="../reference/tapestri_scatterplot.html">tapestri_scatterplot</a></span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">data_layers</span>$<span class="no">normalized</span><span class="kw">[[</span><span class="no">protein_x</span>]],
                  <span class="kw">y</span><span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">data_layers</span>$<span class="no">normalized</span><span class="kw">[[</span><span class="no">protein_y</span>]],
                  <span class="kw">color_by</span> <span class="kw">=</span> <span class="no">color_by</span>)
 <span class="no">p</span> <span class="kw">=</span> <span class="no">p</span> + <span class="fu">xlab</span>(<span class="no">protein_x</span>) + <span class="fu">ylab</span>(<span class="no">protein_y</span>) + <span class="fu">ggtitle</span>(<span class="st">'Color by Genotypes'</span>)
@@ -289,22 +288,22 @@
 <p><img src="loading_data_files/figure-html/unnamed-chunk-2-2.png" width="1152"></p>
 </div>
 </div>
-<div id="load-data-from-tapestri-insights-export" class="section level2">
+<div id="load-the-data-from-tapestri-insights-export" class="section level2">
 <h2 class="hasAnchor">
-<a href="#load-data-from-tapestri-insights-export" class="anchor"></a>Load data from Tapestri Insights Export</h2>
-<p>Work for DNA only. Export can be from a multisample project in Tapestri Insights. usage:</p>
-<ol style="list-style-type: decimal">
-<li>extract exported zip file</li>
-<li>read the <code>NGT.csv</code> and <code>Variants.csv</code> files</li>
-<li>create new <code>Tapestri_Assay</code> object</li>
-</ol>
-<div class="sourceCode" id="cb19"><html><body><pre class="r"><span class="no">export_dir</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata"</span>, <span class="st">"insights_2.2_export"</span>, <span class="kw">package</span> <span class="kw">=</span> <span class="st">"TapestriR"</span>)
+<a href="#load-the-data-from-tapestri-insights-export" class="anchor"></a>Load the data from Tapestri Insights export</h2>
+<p>Works for DNA only. Export can be from a multi-sample project in Tapestri Insights.</p>
+<p>Usage:</p>
+<ul>
+<li>Extract the exported zip file.</li>
+<li>Read directory to create a new <code>Tapestri_Assay</code> object.</li>
+</ul>
+<div class="sourceCode" id="cb15"><html><body><pre class="r"><span class="no">export_dir</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata"</span>, <span class="st">"insights_2.2_export"</span>, <span class="kw">package</span> <span class="kw">=</span> <span class="st">"TapestriR"</span>)
 
-<span class="co">#show files</span>
+<span class="co"># Show files</span>
 <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">dir</a></span>(<span class="no">export_dir</span>)</pre></body></html></div>
 <pre><code>## [1] "AF.csv"       "DP.csv"       "GQ.csv"       "NGT.csv"      "README.txt"  
 ## [6] "Variants.csv"</code></pre>
-<div class="sourceCode" id="cb21"><html><body><pre class="r"><span class="no">variants</span> <span class="kw">=</span> <span class="fu"><a href="../reference/read_insights_export.html">read_insights_export</a></span>(<span class="kw">export_dir</span> <span class="kw">=</span> <span class="no">export_dir</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb17"><html><body><pre class="r"><span class="no">variants</span> <span class="kw">=</span> <span class="fu"><a href="../reference/read_insights_export.html">read_insights_export</a></span>(<span class="kw">export_dir</span> <span class="kw">=</span> <span class="no">export_dir</span>)</pre></body></html></div>
 <pre><code>## Parsed with column specification:
 ## cols(
 ##   .default = col_double(),
@@ -319,7 +318,7 @@
 ##   Whitelist = col_logical()
 ## )</code></pre>
 <pre><code>## See spec(...) for full column specifications.</code></pre>
-<div class="sourceCode" id="cb26"><html><body><pre class="r"><span class="no">variants</span></pre></body></html></div>
+<div class="sourceCode" id="cb22"><html><body><pre class="r"><span class="no">variants</span></pre></body></html></div>
 <pre><code>## Formal class 'Tapestri_Assay' [package "TapestriR"] with 6 slots
 ##   ..@ assay_name         : chr "variants"
 ##   ..@ metadata           :List of 1
