@@ -37,7 +37,9 @@ for(i in 1:length(packages)) {
 
 ```
 
+
 # Load multiomics H5
+
 
 We will analyze single cell DNA and protein sequencing data from the Tapestri Platform to demonstrate the ability to detect both CNVs and SNVs simultaneously and see how the expression of proteins is changing in different cell populations that are mutant or not. 
 
