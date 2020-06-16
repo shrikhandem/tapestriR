@@ -45,7 +45,7 @@ Assays must have identical cell barcodes. Each assay will have different featuer
                 +--GQ
 +-- analysis_layers                   Additional layers after data is processed. Must have same number of cells (rows) 
                     +--               Examples: umap projection of each cell, or kmeans cluster labels
-+-- feature_annotations               Annotations of features. Must have id column that is same as column names in data layers.
++-- feature_annotations               Annotations of features. Must have id column.
 +-- cell_annotations                  Annotations of cells. Required to have barcode and sample name columns 
 ```
 
@@ -58,13 +58,13 @@ Assays must have identical cell barcodes. Each assay will have different featuer
 ```
 <root>
 +-- assay_name                        Name of Assay. Same as one of the layers in the assays slot of Multiomics object
-+-- metadata                          Name of Assay. Same as one of the layers in the assays slot of Multiomics object
++-- metadata                          Assay meta data
 +-- data_layers                       1 or more layers of data. each layer must have same dimensions and matching cell barcodes (rows) and features (columns names) 
                 +--read_counts        raw read counts per protein
                 +--normalized         normalized read counts
                 +--
 +-- analysis_layers                   Additional layers after data is processed. Must have same number of cells (rows) 
                     +--
-+-- feature_annotations               Annotations of features. Must have id column that is same as column names in data layers.
++-- feature_annotations               Annotations of features. Must have id column.
 +-- cell_annotations                  Annotations of cells. Required to have barcode and sample name columns 
 ```
