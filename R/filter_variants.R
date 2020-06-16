@@ -15,7 +15,7 @@
 #' @export
 filter_variants <- function(variant_assay, gqc = 30, dpc = 10, afc = 20, mv = 50, mc = 50, mm = 1, gt.mask = FALSE) {
   
-  warning('this method will not return identical results to Tapestri Insights. Export filtered results from Tapestri Insights or use the Tapestri SDK to filter before importing into R.')
+  warning('This method will not return identical results to Tapestri Insights. Export filtered results from Tapestri Insights or use the Tapestri SDK to filter before importing into R.')
   # variant_assay = variants
   # gqc = 30
   # dpc = 10
@@ -28,7 +28,7 @@ filter_variants <- function(variant_assay, gqc = 30, dpc = 10, afc = 20, mv = 50
   needed_layers = c("AD","DP","GQ","NGT")
   check_assay = needed_layers %in% names(variant_assay@data_layers)
   if(sum(check_assay)!=4) {
-    stop("Assay must containing")
+    stop("Assay must contain four layers, AD, DP, GQ, and NGT.")
   }
   
   data = variant_assay@data_layers

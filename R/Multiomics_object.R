@@ -146,7 +146,7 @@ add_assay <- function(moo, assay, keep_common_cells=FALSE) {
     
     #if not, but we want to keep only the intersect
     if (!keep_common_cells) {
-      stop('Cell IDs do not match')  
+      stop('Cell IDs do not match.')  
     } else {
       interected_cell_ids = dplyr::intersect(assay@cell_annotations$id, moo@cell_annotations$id)
       cell_ind = match(interected_cell_ids, moo@cell_annotations$id)

@@ -101,21 +101,21 @@ tapestri_violinplot <- function(clusters , features) {
 #'
 recode_genotypes <- function(x,collapse_zygosity=TRUE) {
   if (collapse_zygosity) {
-    fct_recode(x,
+    suppressWarnings(fct_recode(x,
                'WT' = '0',
                'MUT' = '1',
                'MUT' = '2',
                'unknown' = '3'
                
-    )
+    ))
   } else {
-    fct_recode(x,
+    suppressWarnings(fct_recode(x,
                'WT' = '0',
                'HET' = '1',
                'HOM' = '2',
                'unknown' = '3'
                
-    )
+    ))
     
   }
 }
