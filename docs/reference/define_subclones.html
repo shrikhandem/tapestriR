@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Read variant assay from data exported from Tapestri Insights — read_insights_export • TapestriR</title>
+<title>define subclones based on NGT values — define_subclones • TapestriR</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Read variant assay from data exported from Tapestri Insights — read_insights_export" />
-<meta property="og:description" content="Creates a Assay object from Tapestri Insights exported zip file. Inlcudes all the DNA variant variant layers, plus variant annotations. If subclone information exists creates any analysis layer with the subclone labels." />
+<meta property="og:title" content="define subclones based on NGT values — define_subclones" />
+<meta property="og:description" content="Similar to how Tapestri Insights v2.2 calculates subclones" />
 
 
 
@@ -118,23 +118,31 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Read variant assay from data exported from Tapestri Insights</h1>
+    <h1>define subclones based on NGT values</h1>
     
-    <div class="hidden name"><code>read_insights_export.Rd</code></div>
+    <div class="hidden name"><code>define_subclones.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Creates a Assay object from Tapestri Insights exported zip file. Inlcudes all the DNA variant variant layers, plus variant annotations. If subclone information exists creates any analysis layer with the subclone labels.</p>
+    <p>Similar to how Tapestri Insights v2.2 calculates subclones</p>
     </div>
 
-    <pre class="usage"><span class='fu'>read_insights_export</span>(<span class='no'>export_dir</span>)</pre>
+    <pre class="usage"><span class='fu'>define_subclones</span>(<span class='no'>assay</span>, <span class='kw'>small_subclone</span> <span class='kw'>=</span> <span class='fl'>0.01</span>, <span class='kw'>ignore_zygosity</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>export_dir</th>
-      <td><p>directory path to exported data. Should contain "AF.csv", "DP.csv", "GQ.csv", "NGT.csv", "README.txt", "Variants.csv"</p></td>
+      <th>assay</th>
+      <td><p>Assay object for DNA variants</p></td>
+    </tr>
+    <tr>
+      <th>small_subclone</th>
+      <td><p>threshold (%) for considering subclones too small</p></td>
+    </tr>
+    <tr>
+      <th>ignore_zygosity</th>
+      <td><p>collapse HET/HOM to just mutated</p></td>
     </tr>
     </table>
 
