@@ -2,7 +2,7 @@
 
 Using the Mission Bio Tapestri Platform, reagents and the *tapestriR* package, we explore Single Nucleotide Variants (SNVs), protein expression and Copy Number Variations (CNVs), including loss of heterozygosity (LOH), which plays a large role in cancer evolution and contributes to cancer heterogeneity. More details can be found in the [Application Note] (https://missionbio.com/protein-reva-application-note-form/). 
 
-The *tapestri* R package is an exploratory data analysis tool. Refer to the README.md file for instructions on how to install the *tapestri* R package. 
+The *tapestriR* package is an exploratory data analysis tool. Refer to the README.md file for instructions on how to install the *tapestriR* package. 
 
 Here we show a few example methods to normalize, cluster and visualize multi-omics data. It is left to the user to explore different methods avaliable in the R community to better explore and interpret their data. 
 
