@@ -13,5 +13,5 @@ read_insights_export(export_dir)
 
 }
 \description{
-Read variant assay from data exported from Tapestri Insights
+Creates a Assay object from Tapestri Insights exported zip file. Inlcudes all the DNA variant variant layers, plus variant annotations. If subclone information exists creates any analysis layer with the subclone labels.
 }

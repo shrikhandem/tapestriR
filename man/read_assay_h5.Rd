@@ -4,7 +4,7 @@
 \alias{read_assay_h5}
 \title{Read Tapestri multi-omics h5 file}
 \usage{
-read_assay_h5(filename, assay_name, min_mutation_rate = 0.01)
+read_assay_h5(filename, assay_name, min_mutation_rate = 0.005)
 }
 \arguments{
 \item{filename}{h5 file path}
