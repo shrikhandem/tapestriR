@@ -92,7 +92,7 @@ read_loom <- function(filename, min_mutation_rate=0.05) {
 #' \dontrun{
 #' tapestri_raw = h5_reader(filename,min_mutation_rate = 0.1)
 #' }
-read_assay_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
+read_assay_h5 <- function(filename, assay_name, min_mutation_rate = 0.005) {
   
   #filename <- "~/Google Drive/launches/r_package/data/merged_all.h5"
   #assay_name='dna'
@@ -158,7 +158,7 @@ read_assay_h5 <- function(filename, assay_name, min_mutation_rate = 0.01) {
                      cell_annotations = cell_annotations,
                      feature_annotations = filtered_features)
 
-  layer_names = h5ls(h5f&sprintf("assays/%s/layers",assay_name))
+  layer_names = rhdf5::h5ls(h5f&sprintf("assays/%s/layers",assay_name))
   
   for(layer in layer_names$name) {
     
@@ -188,12 +188,12 @@ read_tap <- function(filename, experiment_name = NA) {
   if(is.na(experiment_name)) experiment_name = basename(filename)
   
   h5f = rhdf5::H5Fopen(filename, flags = "H5F_ACC_RDONLY")
-  object_str = h5ls(h5f)
+  object_str = rhdf5::h5ls(h5f)
   object_str$object_names = paste0(object_str$group,'/',object_str$name)
   dims = stringr::str_match(string = object_str$dim, pattern = '(.*) x (.*)')
   object_str$rows = as.numeric(dims[,2])
   object_str$columns = as.numeric(dims[,3])
-  assay_names = h5ls(h5f&sprintf("/assays"), recursive = FALSE)
+  assay_names = rhdf5::h5ls(h5f&sprintf("/assays"), recursive = FALSE)
   
   a = read_assay_h5(filename = filename, assay_name = assay_names$name[1])
   moo = create_moo(experiment_name = experiment_name, cell_annotations = a@cell_annotations)
@@ -208,6 +208,8 @@ read_tap <- function(filename, experiment_name = NA) {
 
 
 #' Read variant assay from data exported from Tapestri Insights
+#'
+#' Creates a Assay object from Tapestri Insights exported zip file. Inlcudes all the DNA variant variant layers, plus variant annotations. If subclone information exists creates any analysis layer with the subclone labels.
 #'
 #' @param export_dir directory path to exported data. Should contain "AF.csv", "DP.csv", "GQ.csv", "NGT.csv", "README.txt", "Variants.csv"
 #'
@@ -227,7 +229,7 @@ read_insights_export <- function(export_dir) {
 
   # check if ngt file has only relavent values
   #unique(c(as.matrix(ngt %>% select(-Sample, -Cell))))
-  if(!all.equal(c(0,1,2,3), sort(unique(c(as.matrix(ngt %>% select(-Sample,-Cell))))))) stop('NGT layer can only contain 0, 1, 2, 3 values.')
+  if(!all.equal(c(0,1,2,3), sort(unique(c(as.matrix(ngt %>% select(-matches(c('Sample','Cell','Subclone'))))))))) stop('NGT layer can only contain 0, 1, 2, 3 values.')
   
   cell_annotations = ngt %>% select(sample = Sample, barcode = Cell) %>%
     mutate(barcode = as.character(barcode),
@@ -254,6 +256,10 @@ read_insights_export <- function(export_dir) {
                                             data = layer_data)
     
   })
+  
+  if ('Subclone' %in% colnames(ngt)) {
+    variants_from_insights = add_analysis_layer(assay=variants_from_insights,layer_name = 'Subclone',data = ngt$Subclone)
+  }
   
   return(variants_from_insights)  
 }
