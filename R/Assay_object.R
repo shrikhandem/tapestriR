@@ -206,19 +206,19 @@ add_analysis_layer<- function(assay, layer_name, data) {
 #'
 subset_assay<- function(assay, keep_cell_ids=TRUE, keep_feature_ids = TRUE) {
   
-  if (length(keep_cell_ids) > 1) {
+  if(length(keep_cell_ids) == 1 && keep_cell_ids==TRUE) {
+    cell_ind = 1:nrow(assay$cell_annotations)
+  } else {
     cell_ind = match(keep_cell_ids, assay$cell_annotations$id)
     if (any(is.na(cell_ind))) stop('Cell ids to keep do not exist in the assay.')
-  } else if(keep_cell_ids==TRUE) {
-    cell_ind = 1:nrow(assay$cell_annotations)
   }
 
-  if (length(keep_feature_ids) > 1) {
+  if(length(keep_cell_ids) == 1 && keep_feature_ids==TRUE) {
+    feature_ind = 1:nrow(assay$feature_annotations)
+  } else {
     feature_ind = match(keep_feature_ids, assay$feature_annotations$id)
     if (any(is.na(cell_ind))) stop('Features to keep do not exist in the assay.')
-  } else if(keep_feature_ids==TRUE) {
-    feature_ind = 1:nrow(assay$feature_annotations)
-  }
+  } 
   
   
   for(layer in names(assay$data_layers)){
