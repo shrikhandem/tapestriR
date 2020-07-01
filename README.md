@@ -8,7 +8,7 @@ For additional documentation and tutorials visit: https://missionbio.github.io/t
 
 1) Install `devtools` and `BiocManager`.
 2) Install `TaprestriR`. 
-3) Start with loading_data.Rmd in the vignettes directory. 
+3) Start with tutorials: https://missionbio.github.io/tapestri_multiomics/
 
 
 Packages to help dependencies

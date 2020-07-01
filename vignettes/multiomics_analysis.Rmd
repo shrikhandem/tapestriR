@@ -100,6 +100,7 @@ experiment = add_assay(experiment,manually_filtered_variants, keep_common_cells 
 
 # Normalize the protein data using the clr method.
 protein_counts_norm = experiment$assays$protein$data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
+
 # Add the normalized data to the protein assay.
 experiment$assays$protein = add_data_layer(experiment$assays$protein,'normalized',protein_counts_norm)
 
@@ -188,18 +189,20 @@ data = experiment$assays$dna$data_layers$VAF
 
 projections = list()
 
+# Dimensional reduction using umap.
+
+set.seed(111)
+umap_values <- umap(data, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
+projections[['Projection:umap_manhattan DR:pca data:vaf']] = tibble(x = umap_values[,1], y = umap_values[,2])
+
 # umap_values <- umap(data, scale=TRUE, metric="euclidean", init="laplacian", pca=20) 
 # projections[['Projection:umap_euclidean DR:pca data:vaf']] = tibble(x = umap_values[,1], y = umap_values[,2])
 # 
 # umap_values <- umap(data, scale=TRUE, metric="cosine", init="laplacian", pca=20) 
 # projections[['Projection:umap_cosine DR:pca data:vaf']] = tibble(x = umap_values[,1], y = umap_values[,2])
-# 
-# Dimensional reduction using umap.
-set.seed(111)
-umap_values <- umap(data, scale=TRUE, metric="manhattan", init="laplacian", pca=20) 
-projections[['Projection:umap_manhattan DR:pca data:vaf']] = tibble(x = umap_values[,1], y = umap_values[,2])
 
 experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'projections', as_tibble(projections))
+
 ```
 
 Visualize the projection
