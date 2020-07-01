@@ -27,7 +27,7 @@ log_colMeans <- function(x){
 #' }
 log_norm_by_cell <- function(counts) {
   counts = counts + 1
-  norm_counts <- (log(counts /colMeans(counts)))
+  norm_counts <- (log(t(counts) /colMeans(counts)))
   return(norm_counts)
 }
 
