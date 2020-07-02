@@ -72,7 +72,7 @@ vaf[is.na(vaf)] <- 0
 filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
 # Add the filtered data back to the experiment. This will be a subset of the rest of the assays to ensure that we have the same cells.
-experiment = add_assay(experiment,filtered_variants, keep_common_cells = TRUE)
+experiment = add_assay(moo = experiment,assay = filtered_variants, keep_common_cells = TRUE)
 
 # Normalize using the clr method.
 protein_counts_norm = experiment$assays$protein$data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)

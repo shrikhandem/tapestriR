@@ -72,7 +72,7 @@
 
       
 
-      </header><div class="row">
+      </header><script src="loading_data_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Loading Tapestri Data</h1>
@@ -145,7 +145,7 @@
 <span class="no">filtered_variants</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_data_layer.html">add_data_layer</a></span>(<span class="no">filtered_variants</span>,<span class="st">'VAF'</span>,<span class="no">vaf</span>)
 
 <span class="co"># Add the filtered data back to the experiment. This will be a subset of the rest of the assays to ensure that we have the same cells.</span>
-<span class="no">experiment</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_assay.html">add_assay</a></span>(<span class="no">experiment</span>,<span class="no">filtered_variants</span>, <span class="kw">keep_common_cells</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
+<span class="no">experiment</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_assay.html">add_assay</a></span>(<span class="kw">moo</span> <span class="kw">=</span> <span class="no">experiment</span>,<span class="kw">assay</span> <span class="kw">=</span> <span class="no">filtered_variants</span>, <span class="kw">keep_common_cells</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 
 <span class="co"># Normalize using the clr method.</span>
 <span class="no">protein_counts_norm</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">data_layers</span>$<span class="no">read_counts</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="../reference/clr_by_feature.html">clr_by_feature</a></span>() <span class="kw">%&gt;%</span> <span class="fu">as_tibble</span>(<span class="kw">rownames</span> <span class="kw">=</span> <span class="fl">NA</span>)
@@ -307,30 +307,44 @@
 <pre><code>## Parsed with column specification:
 ## cols(
 ##   .default = col_double(),
-##   Sample = col_character()
+##   Sample = col_character(),
+##   Subclone = col_character(),
+##   Cell = col_character()
 ## )</code></pre>
 <pre><code>## See spec(...) for full column specifications.</code></pre>
 <pre><code>## Parsed with column specification:
 ## cols(
-##   .default = col_character(),
+##   Variant = col_character(),
+##   Function = col_character(),
+##   Protein = col_character(),
+##   `Coding impact` = col_character(),
+##   ClinVar = col_character(),
 ##   DANN = col_double(),
+##   `Variant type` = col_character(),
+##   `RefSeq transcript id` = col_character(),
+##   Gene = col_character(),
+##   cDNA = col_character(),
+##   `dbSNP rsids` = col_character(),
 ##   `Allele Freq (gnomAD)` = col_double(),
-##   Whitelist = col_logical()
+##   Whitelist = col_logical(),
+##   `# Genotyped Cells` = col_character(),
+##   `# Mutated Cells` = col_character(),
+##   `DNA-91946.cells` = col_character()
 ## )</code></pre>
-<pre><code>## See spec(...) for full column specifications.</code></pre>
-<div class="sourceCode" id="cb22"><html><body><pre class="r"><span class="no">variants</span></pre></body></html></div>
+<div class="sourceCode" id="cb21"><html><body><pre class="r"><span class="no">variants</span></pre></body></html></div>
 <pre><code>## Formal class 'Tapestri_Assay' [package "TapestriR"] with 6 slots
 ##   ..@ assay_name         : chr "variants"
 ##   ..@ metadata           :List of 1
-##   .. ..$ cell_info: tibble [4 × 2] (S3: tbl_df/tbl/data.frame)
-##   ..@ feature_annotations: tibble [23 × 24] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
-##   ..@ cell_annotations   : tibble [30,070 × 3] (S3: tbl_df/tbl/data.frame)
+##   .. ..$ cell_info: tibble [1 × 2] (S3: tbl_df/tbl/data.frame)
+##   ..@ feature_annotations: tibble [54 × 20] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+##   ..@ cell_annotations   : tibble [7,023 × 3] (S3: tbl_df/tbl/data.frame)
 ##   ..@ data_layers        :List of 4
-##   .. ..$ NGT: tibble [30,070 × 23] (S3: tbl_df/tbl/data.frame)
-##   .. ..$ AF : tibble [30,070 × 23] (S3: tbl_df/tbl/data.frame)
-##   .. ..$ DP : tibble [30,070 × 23] (S3: tbl_df/tbl/data.frame)
-##   .. ..$ GQ : tibble [30,070 × 23] (S3: tbl_df/tbl/data.frame)
-##   ..@ analysis_layers    : list()</code></pre>
+##   .. ..$ NGT: tibble [7,023 × 54] (S3: tbl_df/tbl/data.frame)
+##   .. ..$ AF : tibble [7,023 × 54] (S3: tbl_df/tbl/data.frame)
+##   .. ..$ DP : tibble [7,023 × 54] (S3: tbl_df/tbl/data.frame)
+##   .. ..$ GQ : tibble [7,023 × 54] (S3: tbl_df/tbl/data.frame)
+##   ..@ analysis_layers    :List of 1
+##   .. ..$ Subclone: tibble [7,023 × 1] (S3: tbl_df/tbl/data.frame)</code></pre>
 </div>
 </div>
   </div>

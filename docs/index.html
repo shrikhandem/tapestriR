@@ -78,27 +78,32 @@
 <div id="overview" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#overview" class="anchor"></a>Overview</h1></div>
-<p>Using the Mission Bio Tapestri Platform, reagents and the <em>tapestriR</em> package, we explore Single Nucleotide Variants (SNVs), protein expression and Copy Number Variations (CNVs), including loss of heterozygosity (LOH), which plays a large role in cancer evolution and contributes to cancer heterogeneity. More details can be found in the [Application Note] (<a href="https://missionbio.com/protein-reva-application-note-form/" class="uri">https://missionbio.com/protein-reva-application-note-form/</a>).</p>
-<p>The <em>tapestri</em> R package is an exploratory data analysis tool. Refer to the README.md file for instructions on how to install the <em>tapestri</em> R package.</p>
+<p>Using the Mission Bio Tapestri Platform, reagents and the <code>tapestriR</code> package, we explore Single Nucleotide Variants (SNVs), protein expression and Copy Number Variations (CNVs), including loss of heterozygosity (LOH), which plays a large role in cancer evolution and contributes to cancer heterogeneity. More details can be found in the [Application Note] (<a href="https://missionbio.com/protein-reva-application-note-form/" class="uri">https://missionbio.com/protein-reva-application-note-form/</a>).</p>
+<p>The <code>tapestriR</code> package is an exploratory data analysis tool. Refer to the README.md file for instructions on how to install the <code>tapestriR</code> package.</p>
 <p>Here we show a few example methods to normalize, cluster and visualize multi-omics data. It is left to the user to explore different methods avaliable in the R community to better explore and interpret their data.</p>
+</div>
+<div id="loading-data" class="section level1">
+<h1 class="hasAnchor">
+<a href="#loading-data" class="anchor"></a>Loading Data</h1>
+<p>The main value of this package is to load data from these sources and create an R object for use in additional analysis and visualiation.</p>
+<ul>
+<li>Tapestri H5 file - enable analysis of DNA variants, CNV, and protein expression</li>
+<li>loom file - enables analysis of DNA variants only</li>
+<li>Exported data from Tapestri Insights - enables analysis of DNA variants only</li>
+</ul>
 </div>
 <div id="objects" class="section level1">
 <h1 class="hasAnchor">
 <a href="#objects" class="anchor"></a>Objects</h1>
-<p>The main value of this package is to load data from these sources and create an R object for use in additional analysis and visualiation.</p>
-<ul>
-<li>Tapestri H5 file</li>
-<li>loom file</li>
-<li>Exported data from Tapestri Insights</li>
-</ul>
-<p>The multiomics object is a structured way to store all of the raw and normalized data as well as the analysis performed on these data. The object ensures that all of the multiomics data is properly aligned for cells and features of the cells.</p>
+<p>The multiomics object is a structured way to store all of the raw and normalized data as well as the analysis performed on these data. The object ensures that all of the multiomics data is properly aligned for cells and features (variants, protein counts…) of the cells.</p>
 <ul>
 <li>row = cells</li>
 <li>columns = features</li>
 </ul>
-<div id="multiomics-object" class="section level3">
-<h3 class="hasAnchor">
-<a href="#multiomics-object" class="anchor"></a>Multiomics Object</h3>
+<div id="multiomics-object" class="section level2">
+<h2 class="hasAnchor">
+<a href="#multiomics-object" class="anchor"></a>Multiomics Object</h2>
+<p>A multiomics object stores a group of assays performed on 1 or more samples.</p>
 <pre><code>&lt;root&gt;
 +-- metadata                          Experiment meta data. Required to have experiment_name
 +-- assays
@@ -108,36 +113,40 @@
           +--
 +-- cell_annotations                  Annotation of each cell, Required to have barcode and sample name columns
 </code></pre>
-<p>Assays must have identical cell barcodes. Each assay will have different featuers.</p>
-<div id="dna_variants-assay-object" class="section level4">
-<h4 class="hasAnchor">
-<a href="#dna_variants-assay-object" class="anchor"></a><code>dna_variants</code> Assay Object</h4>
+</div>
+<div id="assay-object" class="section level2">
+<h2 class="hasAnchor">
+<a href="#assay-object" class="anchor"></a>Assay Object</h2>
+<p>an Assay object stores raw and processed data for 1 or more samples.</p>
+<ul>
+<li>An assay can multiple data layers and analysis layers</li>
+<li>data layers must have same cell barcodes and features</li>
+<li>analysis layers must have same cell barcodes, but can have different features ** Typically store clustering and dimension reduction values in the analysis layers</li>
+</ul>
+<div id="dna_variants-assay-object" class="section level3">
+<h3 class="hasAnchor">
+<a href="#dna_variants-assay-object" class="anchor"></a><code>dna_variants</code> Assay Object</h3>
 <pre><code>&lt;root&gt;
 +-- assay_name                        Name of Assay. Same as one of the layers in the assays slot of Multiomics object
 +-- data_layers                       1 or more layers of data. each layer must have same dimensions and matching cell barcodes (rows) and features (columns names) 
                 +--NGT                Genotype layer. 0=WT, 1=HET, 2=HOM, 3=unknown
                 +--AD
                 +--GQ
+                ...                   additional layers can be added, must have same cell barcodes and features 
 +-- analysis_layers                   Additional layers after data is processed. Must have same number of cells (rows) 
                     +--               Examples: umap projection of each cell, or kmeans cluster labels
 +-- feature_annotations               Annotations of features. Must have id column.
 +-- cell_annotations                  Annotations of cells. Required to have barcode and sample name columns </code></pre>
-<ul>
-<li>An assay can multiple data layers and analysis layers</li>
-<li>data layers must have same cell barcodes and features</li>
-<li>analysis layers must have same cell barcodes, but can have different features ** Typically store clustering and dimension reduction values in the analysis layers</li>
-</ul>
 </div>
-<div id="protein_read_counts-assay-object" class="section level4">
-<h4 class="hasAnchor">
-<a href="#protein_read_counts-assay-object" class="anchor"></a><code>protein_read_counts</code> Assay Object</h4>
+<div id="protein_read_counts-assay-object" class="section level3">
+<h3 class="hasAnchor">
+<a href="#protein_read_counts-assay-object" class="anchor"></a><code>protein_read_counts</code> Assay Object</h3>
 <pre><code>&lt;root&gt;
 +-- assay_name                        Name of Assay. Same as one of the layers in the assays slot of Multiomics object
 +-- metadata                          Assay meta data
 +-- data_layers                       1 or more layers of data. each layer must have same dimensions and matching cell barcodes (rows) and features (columns names) 
                 +--read_counts        raw read counts per protein
                 +--normalized         normalized read counts
-                +--
 +-- analysis_layers                   Additional layers after data is processed. Must have same number of cells (rows) 
                     +--
 +-- feature_annotations               Annotations of features. Must have id column.

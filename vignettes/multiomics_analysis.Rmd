@@ -45,6 +45,8 @@ We will analyze single cell DNA and protein sequencing data from the Tapestri Pl
 
 
 ```{r load_h5, collapse=FALSE}
+
+#replace filename with path to your data
 filename <- system.file("extdata", "4_cell_line_mix_dna_protein.h5", package = "TapestriR")
 
 experiment = read_tap(filename)

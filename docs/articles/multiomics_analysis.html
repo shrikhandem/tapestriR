@@ -72,7 +72,7 @@
 
       
 
-      </header><div class="row">
+      </header><script src="multiomics_analysis_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Multi-Omics Analysis</h1>
@@ -89,7 +89,8 @@
 <h1 class="hasAnchor">
 <a href="#load-multiomics-h5" class="anchor"></a>Load multiomics H5</h1>
 <p>We will analyze single cell DNA and protein sequencing data from the Tapestri Platform to demonstrate the ability to detect both CNVs and SNVs simultaneously and see how the expression of proteins is changing in different cell populations that are mutant or not.</p>
-<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="no">filename</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata"</span>, <span class="st">"4_cell_line_mix_dna_protein.h5"</span>, <span class="kw">package</span> <span class="kw">=</span> <span class="st">"TapestriR"</span>)
+<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="co">#replace filename with path to your data</span>
+<span class="no">filename</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span>(<span class="st">"extdata"</span>, <span class="st">"4_cell_line_mix_dna_protein.h5"</span>, <span class="kw">package</span> <span class="kw">=</span> <span class="st">"TapestriR"</span>)
 
 <span class="no">experiment</span> <span class="kw">=</span> <span class="fu"><a href="../reference/read_tap.html">read_tap</a></span>(<span class="no">filename</span>)
 
@@ -180,6 +181,7 @@
 </ol>
 <div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="co"># Normalize the protein data using the clr method.</span>
 <span class="no">protein_counts_norm</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>$<span class="no">data_layers</span>$<span class="no">read_counts</span> <span class="kw">%&gt;%</span> <span class="fu"><a href="../reference/clr_by_feature.html">clr_by_feature</a></span>() <span class="kw">%&gt;%</span> <span class="fu">as_tibble</span>(<span class="kw">rownames</span> <span class="kw">=</span> <span class="fl">NA</span>)
+
 <span class="co"># Add the normalized data to the protein assay.</span>
 <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_data_layer.html">add_data_layer</a></span>(<span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">protein</span>,<span class="st">'normalized'</span>,<span class="no">protein_counts_norm</span>)
 
@@ -257,16 +259,17 @@
 
 <span class="no">projections</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span>()
 
+<span class="co"># Dimensional reduction using umap.</span>
+
+<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">111</span>)
+<span class="no">umap_values</span> <span class="kw">&lt;-</span> <span class="fu">umap</span>(<span class="no">data</span>, <span class="kw">scale</span><span class="kw">=</span><span class="fl">TRUE</span>, <span class="kw">metric</span><span class="kw">=</span><span class="st">"manhattan"</span>, <span class="kw">init</span><span class="kw">=</span><span class="st">"laplacian"</span>, <span class="kw">pca</span><span class="kw">=</span><span class="fl">20</span>)
+<span class="no">projections</span><span class="kw">[[</span><span class="st">'Projection:umap_manhattan DR:pca data:vaf'</span>]] <span class="kw">=</span> <span class="fu">tibble</span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">umap_values</span>[,<span class="fl">1</span>], <span class="kw">y</span> <span class="kw">=</span> <span class="no">umap_values</span>[,<span class="fl">2</span>])
+
 <span class="co"># umap_values &lt;- umap(data, scale=TRUE, metric="euclidean", init="laplacian", pca=20) </span>
 <span class="co"># projections[['Projection:umap_euclidean DR:pca data:vaf']] = tibble(x = umap_values[,1], y = umap_values[,2])</span>
 <span class="co"># </span>
 <span class="co"># umap_values &lt;- umap(data, scale=TRUE, metric="cosine", init="laplacian", pca=20) </span>
 <span class="co"># projections[['Projection:umap_cosine DR:pca data:vaf']] = tibble(x = umap_values[,1], y = umap_values[,2])</span>
-<span class="co"># </span>
-<span class="co"># Dimensional reduction using umap.</span>
-<span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span>(<span class="fl">111</span>)
-<span class="no">umap_values</span> <span class="kw">&lt;-</span> <span class="fu">umap</span>(<span class="no">data</span>, <span class="kw">scale</span><span class="kw">=</span><span class="fl">TRUE</span>, <span class="kw">metric</span><span class="kw">=</span><span class="st">"manhattan"</span>, <span class="kw">init</span><span class="kw">=</span><span class="st">"laplacian"</span>, <span class="kw">pca</span><span class="kw">=</span><span class="fl">20</span>)
-<span class="no">projections</span><span class="kw">[[</span><span class="st">'Projection:umap_manhattan DR:pca data:vaf'</span>]] <span class="kw">=</span> <span class="fu">tibble</span>(<span class="kw">x</span> <span class="kw">=</span> <span class="no">umap_values</span>[,<span class="fl">1</span>], <span class="kw">y</span> <span class="kw">=</span> <span class="no">umap_values</span>[,<span class="fl">2</span>])
 
 <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">dna</span> <span class="kw">=</span> <span class="fu"><a href="../reference/add_analysis_layer.html">add_analysis_layer</a></span>(<span class="kw">assay</span> <span class="kw">=</span> <span class="no">experiment</span>$<span class="no">assays</span>$<span class="no">dna</span>, <span class="kw">layer_name</span> <span class="kw">=</span> <span class="st">'projections'</span>, <span class="fu">as_tibble</span>(<span class="no">projections</span>))</pre></body></html></div>
 <p>Visualize the projection</p>
