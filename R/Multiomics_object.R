@@ -133,9 +133,6 @@ create_moo<- function(experiment_name, cell_annotations) {
 #'
 add_assay <- function(moo, assay, keep_common_cells=FALSE) {
   
-  # moo = experiment
-  # assay = protein
-
   if(class(assay) != "Tapestri_Assay") {
     stop('Not a valid assay.')  
   }

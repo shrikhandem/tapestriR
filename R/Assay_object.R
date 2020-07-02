@@ -213,7 +213,7 @@ subset_assay<- function(assay, keep_cell_ids=TRUE, keep_feature_ids = TRUE) {
     if (any(is.na(cell_ind))) stop('Cell ids to keep do not exist in the assay.')
   }
 
-  if(length(keep_cell_ids) == 1 && keep_feature_ids==TRUE) {
+  if(length(keep_feature_ids) == 1 && keep_feature_ids==TRUE) {
     feature_ind = 1:nrow(assay$feature_annotations)
   } else {
     feature_ind = match(keep_feature_ids, assay$feature_annotations$id)
