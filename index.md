@@ -5,6 +5,7 @@ Using the Mission Bio Tapestri Platform, reagents and the `tapestriR` package, w
 The `tapestriR` package is an exploratory data analysis tool. Refer to the README.md file for instructions on how to install the `tapestriR` package. 
 The latest version can be found at https://github.com/MissionBio/tapestriR.
 
+
 Here we show a few example methods to normalize, cluster and visualize multi-omics data. It is left to the user to explore different methods avaliable in the R community to better explore and interpret their data. 
 
 # Loading Data
