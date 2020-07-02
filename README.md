@@ -11,16 +11,16 @@ For additional documentation and tutorials visit: https://missionbio.github.io/t
 3) Start with tutorials: https://missionbio.github.io/tapestri_multiomics/
 
 
-Packages to help dependencies
+Packages needed to run the vignettes
 ```r
-install.packages(c("devtools","BiocManager"))
+install.packages(c("devtools", "BiocManager", "tidyverse", "patchwork", "factoextra",  "NbClust", "uwot"))
 ```
 
 Some users have reported defficultly in installing `rhdf5`. Users reported better luck using anaconda. Additional documentation for `rhdf5`: https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html
 ```r
 BiocManager::install("rhdf5")
 ```
-Install the Tapestri R package
+Install the `tapestriR` package
 ```r
 devtools::install_github("MissionBio/tapestri_multiomics")
 ```
