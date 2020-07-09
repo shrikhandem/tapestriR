@@ -7,7 +7,7 @@ Authors@R:
          family = "Bio",
          role = c("aut", "cre", "cph"),
          email = "support@missionbio.com")
-Description: Detect and Compare cell clones from DNA/Protein analytes, analyze copy number variations from variants detected by Tapestri Pipeline.
+Description: Detect and Compare cell clones from DNA/Protein analytes, analyse copy number variations from variants detected by Tapestri Pipeline.
 License: AGPL-3
 URL: https://missionbio.com/
 Depends: 
