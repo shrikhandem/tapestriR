@@ -28,12 +28,12 @@ Enable loading from various files.
 
 * H5 is the future format for multi-omics and multi-samples, supporting DNA and DNA + Protein analysis. 
 * Loom supports only DNA mutation analysis.
-* Insights export only supports DNA analysis.
+* Tapestri Insights export supports only DNA analysis.
 
 
 ## Load from Loom
 
-Works only for DNA and single samples since loom files only contain 1 sample.  
+Works only for DNA and single samples since Loom files only contain 1 sample.  
 
 ```{r load_loom, cache=TRUE}
 
@@ -51,10 +51,10 @@ filtered_variants
 
 ## Load multi-omics H5
 
-Works for DNA and DNA + Protein data. Also works for multi-sample. Best practice is to create a multi-assay, multi-sample h5 in Pipeline, and apply filters before loading into R. 
+Works for DNA and DNA + Protein data. Also works for multi-sample. Best practice is to create a multi-assay, multi-sample H5 in Pipeline, and apply filters before loading into R. 
 
 Usage:
-* Load multi-sample multi-omic h5 file
+* Load multi-sample multi-omics H5 file
 * Filter and normalize assays  
 
 
@@ -76,6 +76,7 @@ experiment = add_assay(moo = experiment,assay = filtered_variants, keep_common_c
 
 # Normalize using the clr method.
 protein_counts_norm = experiment$assays$protein$data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
+
 # Add normalized data to the protein assay.
 experiment$assays$protein = add_data_layer(experiment$assays$protein,'normalized',protein_counts_norm)
 
@@ -87,14 +88,14 @@ experiment$assays$cnv = add_data_layer(experiment$assays$cnv,'normalized',normal
 experiment
 ```
 
-## Create your own multiomics object
+## Create your own Multiomics Object
 
-Build a multiomics object from individual components instead of using the `read_tap` function. 
+Build a Multiomics Object from individual components instead of using the `read_tap` function. 
 
 * Load variant assay and filter. 
-* Load Protein assay and normalize.
+* Load protein assay and normalize.
 * Load DNA read counts.
-* Create a multiomics object and merge all 3 assays. This will ensure each assay has the same cells. 
+* Create a Multiomics Object and merge all 3 assays. This will ensure each assay has the same cells. 
 
 
 ```{r load_data}
@@ -114,12 +115,14 @@ filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
 # Load the protein assay and normalize.
 protein = read_assay_h5(filename = filename, assay_name = ASSAY_NAME_PROTEIN)
+
 # Normalize using the clr method.
 protein_counts_norm = protein@data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
+
 # Add normalized data to the protein assay.
 protein = add_data_layer(protein,'normalized',protein_counts_norm)
 
-# Create a multiomics object (moo).
+# Create a Multiomics Object (moo).
 experiment = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
 experiment = add_assay(moo = experiment,assay = filtered_variants)
 
@@ -180,14 +183,14 @@ p
 ```
 
 
-## Load the data from Tapestri Insights export
+## Load the data from a Tapestri Insights export
 
 Works for DNA only. Export can be from a multi-sample project in Tapestri Insights. 
 
 Usage:
 
 * Extract the exported zip file.
-* Read directory to create a new `Tapestri_Assay` object.
+* Read the directory to create a new `Tapestri_Assay` Object.
 
 ```{r}
 
