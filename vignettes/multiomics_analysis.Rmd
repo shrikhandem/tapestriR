@@ -1,5 +1,5 @@
 ---
-title: "Multi-Omics Analysis"
+title: "Multi-omics Analysis"
 output:
   html_document: 
     toc: yes
@@ -38,10 +38,10 @@ for(i in 1:length(packages)) {
 ```
 
 
-# Load multiomics H5
+# Load multi-omics H5
 
 
-We will analyze single cell DNA and protein sequencing data from the Tapestri Platform to demonstrate the ability to detect both CNVs and SNVs simultaneously and see how the expression of proteins is changing in different cell populations that are mutant or not. 
+We will analyze single-cell DNA and protein sequencing data from the Tapestri Platform to demonstrate the ability to detect both CNVs and SNVs simultaneously and see how the expression of proteins changes in different cell populations that are mutant or not. 
 
 
 ```{r load_h5, collapse=FALSE}
@@ -56,7 +56,7 @@ experiment
 
 # Filter variants
 
-Best practice is to create a multi-assay, multi-sample h5 in Pipeline, and apply filters before loading into R. 
+Best practice is to create a multi-assay, multi-sample H5 in Pipeline and apply filters before loading into R. 
 We've done some filtering here. Notice how the number of cells and features change after filtering. 
 
 ```{r filter_variants}
@@ -76,15 +76,15 @@ experiment
 
 ### Filtered variants
 
-Picking the right set of variants is critical.
+Choosing the right set of variants is critical.
 
 ```{r}
 
 
-#manually select the rest of variants
+# Manually select the rest of variants.
 good_variants = experiment$assays$dna$feature_annotations %>% filter(QUAL > 30000)
 
-#Manual filters
+# Manual filters
 manually_filtered_variants = subset_assay(assay = experiment$assays$dna, keep_feature_ids = good_variants$id)
 experiment = add_assay(experiment,manually_filtered_variants, keep_common_cells = TRUE)
 
@@ -167,22 +167,22 @@ p
 
 ## SNV
 
-We will start with the genotype data and explore also how we can identify clones
+We will start with the genotype data and also explore how we can identify clones.
 
-###determine clones similar to Tapestri Insights
+### Determine the clones similarly to Tapestri Insights.
 
-based on genotypes, group each cell into subclones as Tapestri Insights does. 
+Based on genotypes, group each cell into subclones as Tapestri Insights does. 
 
 ```{r}
 
-#define subclones based on NGT values similar to TI
+# Define the subclones based on NGT values similar to Tapestri Insights.
 ngt_clones = define_subclones(experiment$assays$dna, ignore_zygosity = TRUE)
 
 experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'TI subclone', ngt_clones$subclone_label)
 
 ```
 
-### Umap projection
+### UMAP projection
 
 First, let's reduce the dimensions and see how this will be displayed in a UMAP plot.
 
@@ -207,7 +207,7 @@ experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_
 
 ```
 
-Visualize the projection
+### Visualize the projection
 
 ```{r umap, message=FALSE, warning=FALSE, cache=TRUE}
 # Show a simple plot of the projection.
@@ -234,8 +234,8 @@ silhouette = fviz_nbclust(cluster_on, kmeans, method = "silhouette")+
   labs(subtitle = "Silhouette method")
 
 # Gap statistic
-# nboot = 50 to keep the function speedy. 
-# Recommended value: nboot= 500 for your analysis
+# nboot = 50 to keep the function speedy 
+# Recommended value: nboot = 500 for your analysis
 # Use verbose = FALSE to hide computing progression
 # set.seed(123)
 # gap_stat = fviz_nbclust(cluster_on, kmeans, nstart = 25,  method = "gap_stat", nboot = 25)+
@@ -248,13 +248,13 @@ silhouette = fviz_nbclust(cluster_on, kmeans, method = "silhouette")+
 ```
 
 
-### Cluster on umap projection
+### Cluster on a UMAP projection
 
-Clustering the data is a not a trival task. 
-* Clustering can be done one umap projection or the raw data. 
-* There are numerous clustering methods with parameters that need optimization for your data
+Clustering the data is not a trivial task. 
+* Clustering can be done on a UMAP projection or the raw data. 
+* There are numerous clustering methods with parameters that need optimization for your data.
 
-It is left to use to explore the rich community of R packages for clustering. Here we show clustering by kmeans on a umap projection.
+It is left to the user to explore the rich community of R packages for clustering. Here, we show clustering by k-means on a UMAP projection.
 
 ```{r cluster snv, cache=TRUE}
 
@@ -281,11 +281,11 @@ experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_
 ```
 
 
-### Compare different clusters
+### Compare the different clusters
 
-In this example we're plotting the TI subclone labels on the the umap projection on VAF data.
+In this example, we plot the Tapestri Insights subclone labels on the UMAP projection on VAF data.
 
-color_by can be a data.frame of multiple clustering methods and all will be plotted side by side
+color_by can be a data.frame of multiple clustering methods, and all will be plotted side by side.
 
 ```{r fig.width = 12, fig.height = 8}
 
@@ -372,7 +372,7 @@ p
 
 ### Single assay heatmaps
 
-Next we plot the SNVs for each filtered variant across all cells in heatmap format. We're only providing a simple example to get started.
+Next, we plot the SNVs for each filtered variant across all cells in a heatmap format. We only provide a simple example to get started.
 
 Users should become familiar with ComplexHeatmap::Heatmap https://jokergoo.github.io/ComplexHeatmap-reference/book/. 
 
@@ -413,13 +413,13 @@ snv.h
 
 ### Cluster by proteins 
 Let's explore our protein count data. 
-As we identify 4 clusters using the genotype data, we define also here 4 clones too. 
+As we identify 4 clusters using the genotype data, we also define 4 clones. 
 
 
 ```{r cluster_proteins, cache=TRUE}
 
 
-# Dimensional reduction using umap
+# Dimensional reduction using umap.
 set.seed(111)
 umap_values <- umap(experiment$assays$protein$data_layers$normalized, scale=TRUE, metric="euclidean", init="laplacian", pca=20) 
 
@@ -452,7 +452,7 @@ experiment$assays$protein = add_analysis_layer(assay = experiment$assays$protein
 
 ### Plot the UMAP and clusters
 
-Plot all the different clusters on the same umap projection.
+# Plot all the different clusters on the same UMAP projection.
 
 ```{r fig.width = 12, fig.height = 8}
 
@@ -493,7 +493,7 @@ p_umap / p_violin
 ```
 
 
-### Color UMAP by features
+### Color the UMAP by features
 
 ```{r fig.width = 12, fig.height = 8}
 
@@ -515,7 +515,7 @@ To do:
 * Label analytes.
 
 Users should become familiar with ComplexHeatmap::Heatmap https://jokergoo.github.io/ComplexHeatmap-reference/book/. 
-We're only providing a simple example to get started.
+We only provide a simple example to get started.
 
 ```{r}
 
@@ -552,7 +552,7 @@ protein.h
 Usage: 
 
 * Select a cluster that you think is the normal population.
-** Explore your data to identify a control group, which is assumed to be normal population and therefore deploid. 
+** Explore your data to identify a control group, which is assumed to be the normal population and, therefore, diploid. 
 * Normalize the read counts based on this normal population.
 * Plot as a heatmap to review.
 
@@ -570,7 +570,7 @@ experiment$assays$cnv <- add_analysis_layer(assay = experiment$assays$cnv,layer_
 
 ### Heatmap
 
-From the heatmap we can clearly see the regions where there is loss of heterozygosity and ploidy from 2 is reduced closer to 1.
+From the heatmap, we can clearly see the regions where there is loss of heterozygosity and ploidy, 2 is reduced closer to 1.
 
 ```{r}
 
@@ -605,9 +605,9 @@ p = tapestri_ploidy_plot(
 p
 ```
 
-## Multi-omic heatmap 
+## Multi-omics heatmap 
 
-Combine SNV, CNV and Protein data into a single heatmap. A nice feature of Complexheatmaps package
+Combine SNV, CNV, and Protein data into a single heatmap. A nice feature of the ComplexHeatmap package.
 
 ```{r  fig.width = 12, fig.height = 8}
 
