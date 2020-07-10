@@ -3,7 +3,7 @@ setOldClass(c("tbl_df", "tbl", "data.frame"))
 
 #' Tapestri_Assay class
 #'
-#' Store assay specific details for given sample
+#' Store assay-specific details for a given sample.
 #'
 #' @slot assay_name 
 #' @slot cell_annotations 
@@ -107,7 +107,7 @@ setMethod(
 #' @param feature_annotations 
 #' @param assay_name assay name (dna, cnv, protein)
 #' @param cell_annotations table of data annotating cells, including sample labels
-#' @param feature_annotations table of data annotating features. i.e. variant names or amplicon name
+#' @param feature_annotations table of data annotating features, i.e., variant names or amplicon name
 #'
 #' @return Tapestri_Assay object
 #' @importFrom methods new
@@ -139,9 +139,9 @@ create_assay<- function(assay_name, cell_annotations, feature_annotations) {
 }
 
 
-#' Add additional layers of data to Tapestri_Assay Object
+#' Add additional layers of data to the Tapestri_Assay Object
 #'
-#' @param assay Tapestri_Assay object to add data to
+#' @param assay Tapestri_Assay Object to add data to
 #' @param layer_name name of layer
 #' @param data new data to add
 #'
@@ -170,11 +170,11 @@ add_data_layer<- function(assay, layer_name, data) {
 }
 
 
-#' Add additional layers of analysis to Tapestri_Assay Object. 
+#' Add additional layers of analysis to the Tapestri_Assay Object 
 #' 
-#' The function will check the new data has same number of cells
+#' The function will check if the new data has the same number of cells.
 #'
-#' @param assay Tapestri_Assay object to add data to
+#' @param assay Tapestri_Assay Object to add data to
 #' @param layer_name name of layer
 #' @param data new data to add
 #'
@@ -197,7 +197,7 @@ add_analysis_layer<- function(assay, layer_name, data) {
 
 #' Subset assay
 #'
-#' @param assay Assay object to subset
+#' @param assay Assay Object to subset
 #' @param keep_cell_ids vector of cell ids to keep
 #' @param keep_feature_ids vector of feature ids to keep
 #'
@@ -210,14 +210,14 @@ subset_assay<- function(assay, keep_cell_ids=TRUE, keep_feature_ids = TRUE) {
     cell_ind = 1:nrow(assay$cell_annotations)
   } else {
     cell_ind = match(keep_cell_ids, assay$cell_annotations$id)
-    if (any(is.na(cell_ind))) stop('Cell ids to keep do not exist in the assay.')
+    if (any(is.na(cell_ind))) stop('Cell ids to keep that do not exist in the assay.')
   }
 
   if(length(keep_feature_ids) == 1 && keep_feature_ids==TRUE) {
     feature_ind = 1:nrow(assay$feature_annotations)
   } else {
     feature_ind = match(keep_feature_ids, assay$feature_annotations$id)
-    if (any(is.na(cell_ind))) stop('Features to keep do not exist in the assay.')
+    if (any(is.na(cell_ind))) stop('Features to keep that do not exist in the assay.')
   } 
   
   
