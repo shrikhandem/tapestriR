@@ -2,13 +2,13 @@
 
 #' Filter raw genotypes based on quality
 #' 
-#' @param variant_assay Assay object of type dna
-#' @param gqc Genotype quality cutoff (default 30)
-#' @param dpc Read depth cutoff (default 10)
-#' @param afc Allele frequency cutoff (default 20)
-#' @param mv Remove variants with < mv of known values (default 50)
-#' @param mc Remove variants with < mc of known values (default 50)
-#' @param mm Remove variants mutated in < mm of cells (default 1)
+#' @param variant_assay Assay Object of type dna
+#' @param gqc genotype quality cutoff (default 30)
+#' @param dpc read depth cutoff (default 10)
+#' @param afc allele frequency cutoff (default 20)
+#' @param mv remove variants with < mv of known values (default 50)
+#' @param mc remove variants with < mc of known values (default 50)
+#' @param mm remove variants mutated in < mm of cells (default 1)
 #' @param gt.mask mask low quality GT as missing (if GQ/DP/AF lower than cutoff, default FALSE)
 #'
 #' @return Filtered genotypes
