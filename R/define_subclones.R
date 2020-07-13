@@ -1,8 +1,8 @@
-#' define subclones based on NGT values
+#' Define subclones based on NGT values
 #' 
 #' Similar to how Tapestri Insights v2.2 calculates subclones 
 #'
-#' @param assay Assay object for DNA variants
+#' @param assay Assay Object for DNA variants
 #' @param small_subclone threshold (%) for considering subclones too small
 #' @param ignore_zygosity collapse HET/HOM to just mutated
 #'
