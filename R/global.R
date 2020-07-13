@@ -6,6 +6,6 @@
 NULL
 
 .onAttach <- function(libname, pkgname) {
-  packageStartupMessage("Welcome to the `tapestri` R package by Mission Bio.
+  packageStartupMessage("Welcome to the `tapestriR` package by Mission Bio.
 For additional documentation and vignettes visit: https://missionbio.github.io/tapestriR/")
 }
