@@ -104,8 +104,8 @@ setMethod(
 
 #' Create Multiomics Object
 #'
-#' @param experiment_name Name of Experiment
-#' @param cell_annotations table of cell annotations. All in this object must match these cell annotations
+#' @param experiment_name name of experiment
+#' @param cell_annotations table of cell annotations, all in this object must match these cell annotations
 #'
 #' @return Tapestri_Multiomics Object (moo)
 #' @importFrom methods new
@@ -122,11 +122,11 @@ create_moo<- function(experiment_name, cell_annotations) {
 }
 
 
-#' Add Assay Object to Multiomics object (moo)
+#' Add Assay Object to Multiomics Object (moo)
 #'
-#' @param moo Multiomics object 
-#' @param assay new Assay object to add
-#' @param keep_common_cells default FALSE. Will throw error if number of cells and cell ids dont match. If TRUE merge assays and only keep intersect of cells from all assays. 
+#' @param moo Multiomics Object 
+#' @param assay new Assay Object to add
+#' @param keep_common_cells default FALSE, will throw error if number of cells and cell ids don't match. If TRUE, merge assays and only keep the intersect of cells from all assays. 
 #'
 #' @return
 #' @export
@@ -137,11 +137,11 @@ add_assay <- function(moo, assay, keep_common_cells=FALSE) {
     stop('Not a valid assay.')  
   }
 
-  #check if the cells in the new assay matches current assay cells
+  #check if the cells in the new assay match the current assay cells
   if(length(moo@cell_annotations$id) != length(assay@cell_annotations$id) ||
     all.equal(moo@cell_annotations$id, assay@cell_annotations$id) != TRUE) {
     
-    #if not, but we want to keep only the intersect
+    #if not, we only want to keep the intersect
     if (!keep_common_cells) {
       stop('Cell IDs do not match.')  
     } else {
@@ -157,7 +157,7 @@ add_assay <- function(moo, assay, keep_common_cells=FALSE) {
       moo@assays[[assay@assay_name]] = subset_assay(assay = assay, keep_cell_ids = interected_cell_ids)
     }
   } else {
-    #the cell info is the same between current assays and new one
+    #the cell info is the same between the current assays and new one
     moo@assays[[assay@assay_name]] = assay    
   }
   moo@metadata[['cell_info']] = moo@cell_annotations %>% group_by(sample) %>% summarise(cells=n())
