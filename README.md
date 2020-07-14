@@ -16,7 +16,7 @@ Packages needed to run the vignettes
 install.packages(c("devtools", "BiocManager", "tidyverse", "patchwork", "factoextra",  "NbClust", "uwot"))
 ```
 
-Some users have reported defficultly in installing `rhdf5`. Users reported better luck using anaconda. Additional documentation for `rhdf5`: https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html
+Some users have reported difficulty in installing `rhdf5`. Users reported better luck using anaconda. Additional documentation for `rhdf5`: https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html
 ```r
 BiocManager::install("rhdf5")
 ```
@@ -34,7 +34,7 @@ For tutorials visit: https://missionbio.github.io/tapestriR/
 The purpose of this package is to enable easy loading of Tapestri data from various sources. The vignettes offer multiple examples of how to analyze these data, but it’s left to the user to explore the wide range of our packages to gain insights. For an easy-to-use solution, check out Tapestri Insights at https://portal.missionbio.com/. 
 
 # Getting help
-If you have any questions or need more information about this R package or the methods it implements, please contact Anup at parikh@missionbio.com. You can also post questions to the github repository. 
+If you have any questions or need more information about this R package or the methods it implements, please contact Anup at parikh@missionbio.com. You can also post questions to the GitHub repository. 
 
 # License
 AGPL-3
