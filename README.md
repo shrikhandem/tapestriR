@@ -16,7 +16,7 @@ Packages needed to run the vignettes
 install.packages(c("devtools", "BiocManager", "tidyverse", "patchwork", "factoextra",  "NbClust", "uwot"))
 ```
 
-Some users have reported defficultly in installing `rhdf5`. Users reported better luck using anaconda. Additional documentation for `rhdf5`: https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html
+Some users have reported difficultly in installing `rhdf5`. Users reported better luck using anaconda. Additional documentation for `rhdf5`: https://www.bioconductor.org/packages/release/bioc/html/rhdf5.html
 ```r
 BiocManager::install("rhdf5")
 ```
