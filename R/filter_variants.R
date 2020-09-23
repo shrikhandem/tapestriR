@@ -25,27 +25,34 @@ filter_variants <- function(variant_assay, gqc = 30, dpc = 10, afc = 20, mv = 50
   # mm = 1
   # gt.mask = FALSE
 
-  needed_layers = c("AD","DP","GQ","NGT")
+  needed_layers = c("AF","DP","GQ","NGT")
   check_assay = needed_layers %in% names(variant_assay@data_layers)
   if(sum(check_assay)!=4) {
-    stop("Assay must contain four layers, AD, DP, GQ, and NGT.")
+    stop("Assay must contain four layers, AF, DP, GQ, and NGT.")
   }
   
   data = variant_assay@data_layers
   
   gt <- as.matrix(data$NGT)
   mask <- (gt < 3)
-  mutated <- (gt == 1 | gt == 2)
+  mutated <- (gt == 1 | gt ==2)
+  not_mutated <- (gt == 0 | gt ==3) 
   
   gq <- (data$GQ >= gqc)
   
   
   dp <- as.matrix(data$DP)
-  ad <- as.matrix(data$AD)
-  af <- matrix(100, nrow = nrow(dp), ncol = ncol(dp))
   
-  af[mutated] <- ad[mutated] * 100 / dp[mutated]
-  af[is.na(af)] <- 0
+  ########Implementation for older H5 files#######
+  #ad <- as.matrix(data$AD)
+  #af <- matrix(100, nrow = nrow(dp), ncol = ncol(dp))
+  #af[mutated] <- ad[mutated] * 100 / dp[mutated]
+  #af[is.na(af)] <- 0
+  
+  #######new H5 has the AF layer built in so no need for additional calculation. 
+  ####But the AF layer has WT and missing set to 0, instead of 100 as seen here so replacing the values for cells with NGT as 0 and 3
+  af <- as.matrix(data$AF)
+  af[not_mutated] <- 100
   af <- (af >= afc)
   dp <- (dp >= dpc)
   ngt_filter <- gq & dp & af & mask

@@ -61,12 +61,7 @@ We've done some filtering here. Notice how the number of cells and features chan
 
 ```{r filter_variants}
 # Ideally, we would start by loading a filtered H5, but for now, we load data with some basic filters.
-filtered_variants = filter_variants(experiment$assays$dna)
-
-# Add VAF layer into the DNA assay.
-vaf=round(filtered_variants$data_layers$AD/filtered_variants$data_layers$DP, 3)
-vaf[is.na(vaf)] <- 0
-filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
+filtered_variants = filter_variants(experiment$assays$dna_variants)
 
 # Add the filtered data back to the experiment. This will be a subset of the rest of the assays to ensure that we have the same cells.
 experiment = add_assay(experiment,filtered_variants, keep_common_cells = TRUE)
@@ -82,11 +77,12 @@ Picking the right set of variants is critical.
 
 
 #manually select the rest of variants
-good_variants = experiment$assays$dna$feature_annotations %>% filter(QUAL > 30000)
+good_variants = experiment$assays$dna_variants$feature_annotations %>% filter(QUAL > 30000)
 
 #Manual filters
-manually_filtered_variants = subset_assay(assay = experiment$assays$dna, keep_feature_ids = good_variants$id)
+manually_filtered_variants = subset_assay(assay = experiment$assays$dna_variants, keep_feature_ids = good_variants$id)
 experiment = add_assay(experiment,manually_filtered_variants, keep_common_cells = TRUE)
+experiment
 
 #DT::datatable(experiment$assays$dna$feature_annotations)
 ```
@@ -101,14 +97,14 @@ experiment = add_assay(experiment,manually_filtered_variants, keep_common_cells 
 ```{r normalize}
 
 # Normalize the protein data using the clr method.
-protein_counts_norm = experiment$assays$protein$data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
+protein_counts_norm = experiment$assays$protein_read_counts$data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
 
 # Add the normalized data to the protein assay.
-experiment$assays$protein = add_data_layer(experiment$assays$protein,'normalized',protein_counts_norm)
+experiment$assays$protein_read_counts = add_data_layer(experiment$assays$protein_read_counts,'normalized',protein_counts_norm)
 
 # Normalize the DNA read counts. 
-normalized_dna_reads = normalize_dna_reads(experiment$assays$cnv$data_layers$read_counts)
-experiment$assays$cnv = add_data_layer(experiment$assays$cnv,'normalized',normalized_dna_reads)
+normalized_dna_reads = normalize_dna_reads(experiment$assays$dna_read_counts$data_layers$read_counts)
+experiment$assays$dna_read_counts = add_data_layer(experiment$assays$dna_read_counts,'normalized',normalized_dna_reads)
 
 ```
 
@@ -138,27 +134,27 @@ protein_y = 2
 ##################
 
 # All proteins
-color_by = experiment$assays$protein$data_layers$normalized
+color_by = experiment$assays$protein_read_counts$data_layers$normalized
 
 # Select a few proteins.
-# color_by =  experiment$assays$protein$data_layers$normalized %>% select('CD110','CD117')
+# color_by =  experiment$assays$protein_read_counts$data_layers$normalized %>% select('CD110','CD117')
 
 # Select a few variants.
 # color_by =  experiment$assays$dna$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
 
 
-p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[protein_x]], 
-                 y= experiment$assays$protein$data_layers$normalized[[protein_y]], 
+p  = tapestri_scatterplot(x = experiment$assays$protein_read_counts$data_layers$normalized[[protein_x]], 
+                 y= experiment$assays$protein_read_counts$data_layers$normalized[[protein_y]], 
                  color_by = color_by)+ scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
 p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Protein Expression')
 p
 
 # Select a few variants.
-color_by =  experiment$assays$dna$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+color_by =  experiment$assays$dna_variants$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
 
 
-p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[protein_x]], 
-                 y= experiment$assays$protein$data_layers$normalized[[protein_y]], 
+p  = tapestri_scatterplot(x = experiment$assays$protein_read_counts$data_layers$normalized[[protein_x]], 
+                 y= experiment$assays$protein_read_counts$data_layers$normalized[[protein_y]], 
                  color_by = color_by)
 p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Genotypes')
 p
@@ -176,9 +172,9 @@ based on genotypes, group each cell into subclones as Tapestri Insights does.
 ```{r}
 
 #define subclones based on NGT values similar to TI
-ngt_clones = define_subclones(experiment$assays$dna, ignore_zygosity = TRUE)
+ngt_clones = define_subclones(experiment$assays$dna_variants, ignore_zygosity = TRUE)
 
-experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'TI subclone', ngt_clones$subclone_label)
+experiment$assays$dna_variants = add_analysis_layer(assay = experiment$assays$dna_variants, layer_name = 'TI subclone', ngt_clones$subclone_label)
 
 ```
 
@@ -187,7 +183,7 @@ experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_
 First, let's reduce the dimensions and see how this will be displayed in a UMAP plot.
 
 ```{r projections, message=FALSE, warning=FALSE, cache=TRUE}
-data = experiment$assays$dna$data_layers$VAF
+data = experiment$assays$dna_variants$data_layers$AF
 
 projections = list()
 
@@ -203,7 +199,7 @@ projections[['Projection:umap_manhattan DR:pca data:vaf']] = tibble(x = umap_val
 # umap_values <- umap(data, scale=TRUE, metric="cosine", init="laplacian", pca=20) 
 # projections[['Projection:umap_cosine DR:pca data:vaf']] = tibble(x = umap_values[,1], y = umap_values[,2])
 
-experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'projections', as_tibble(projections))
+experiment$assays$dna_variants = add_analysis_layer(assay = experiment$assays$dna_variants, layer_name = 'projections', as_tibble(projections))
 
 ```
 
@@ -211,7 +207,7 @@ Visualize the projection
 
 ```{r umap, message=FALSE, warning=FALSE, cache=TRUE}
 # Show a simple plot of the projection.
-projection = experiment$assays$dna$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
+projection = experiment$assays$dna_variants$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
 ggplot(data=projection) + geom_point(aes(x = x, y = y), alpha = 0.5, size=0.8)
 
 ```
@@ -223,7 +219,7 @@ In this step, we determine the optimal number of clusters for our dataset using 
 
 ```{r num_clusters, warning=FALSE, cache=TRUE}
 
-cluster_on = experiment$assays$dna$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
+cluster_on = experiment$assays$dna_variants$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
 
 # Elbow method
 elbow = fviz_nbclust(cluster_on, kmeans, method = "wss") +
@@ -262,7 +258,7 @@ It is left to use to explore the rich community of R packages for clustering. He
 
 # Hold all the different customer labels in a single structure.
 
-cluster_by = experiment$assays$dna$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
+cluster_by = experiment$assays$dna_variants$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
 clusters = list()
 
 # Do the clustering.
@@ -275,7 +271,7 @@ for(i in 2:10) {
 #############
 # Add cluster labels to the analysis data structure.
 #############
-experiment$assays$dna = add_analysis_layer(assay = experiment$assays$dna, layer_name = 'umap_vaf_clusters', as_tibble(clusters))
+experiment$assays$dna_variants = add_analysis_layer(assay = experiment$assays$dna_variants, layer_name = 'umap_vaf_clusters', as_tibble(clusters))
 
 
 ```
@@ -289,8 +285,8 @@ color_by can be a data.frame of multiple clustering methods and all will be plot
 
 ```{r fig.width = 12, fig.height = 8}
 
-color_by = experiment$assays$dna$analysis_layers$`TI subclone`
-projection = experiment$assays$dna$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
+color_by = experiment$assays$dna_variants$analysis_layers$`TI subclone`
+projection = experiment$assays$dna_variants$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
 
 
 p  = tapestri_scatterplot(
@@ -309,8 +305,8 @@ p
  
  # %>% select(!contains('chr2:198267'))
 
-color_by = experiment$assays$dna$data_layers$NGT %>% select(1:20) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
-projection = experiment$assays$dna$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
+color_by = experiment$assays$dna_variants$data_layers$NGT %>% select(1:20) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+projection = experiment$assays$dna_variants$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
 
 p  = tapestri_scatterplot(
                  x = projection$x, 
@@ -330,8 +326,8 @@ p
 ```{r fig.width = 12, fig.height = 8}
 
 
-color_by = experiment$assays$dna$analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
-projection = experiment$assays$dna$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
+color_by = experiment$assays$dna_variants$analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
+projection = experiment$assays$dna_variants$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
 
 p  = tapestri_scatterplot(
                  x = projection$x, 
@@ -341,7 +337,7 @@ p = p + umap_theme() + ggtitle('umap_vaf_clusters') + theme(legend.position = 'n
 
 
 v = tapestri_violinplot(clusters = color_by,
-               features = experiment$assays$protein$data_layers$normalized)
+               features = experiment$assays$protein_read_counts$data_layers$normalized)
 v = v + theme_bw() + theme(legend.position = "none",
                             axis.text.x = element_text(angle = 90, hjust = 1))
   
@@ -356,8 +352,8 @@ p / v
 
 ```{r fig.width = 12, fig.height = 8}
 
-color_by = experiment$assays$protein$data_layers$normalized
-projection = experiment$assays$dna$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
+color_by = experiment$assays$protein_read_counts$data_layers$normalized
+projection = experiment$assays$dna_variants$analysis_layers$projections$`Projection:umap_manhattan DR:pca data:vaf`
 
 
 p  = tapestri_scatterplot(
@@ -379,13 +375,13 @@ Users should become familiar with ComplexHeatmap::Heatmap https://jokergoo.githu
 ```{r}
 
 # Order the features in chr order.
-variant_order = experiment$assays$dna$feature_annotations %>%
+variant_order = experiment$assays$dna_variants$feature_annotations %>%
   mutate(CHROM = as.numeric(CHROM), POS = as.numeric(POS)) %>%
   arrange(CHROM, POS)
 
-genotypes.mat = experiment$assays$dna@data_layers$NGT %>% select(variant_order$id)
+genotypes.mat = experiment$assays$dna_variants@data_layers$NGT %>% select(variant_order$id)
 
-clusters = experiment$assays$dna@analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
+clusters = experiment$assays$dna_variants@analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
 
 snv.h <- ComplexHeatmap::Heatmap(
   as.matrix(genotypes.mat),
@@ -421,18 +417,18 @@ As we identify 4 clusters using the genotype data, we define also here 4 clones 
 
 # Dimensional reduction using umap
 set.seed(111)
-umap_values <- umap(experiment$assays$protein$data_layers$normalized, scale=TRUE, metric="euclidean", init="laplacian", pca=20) 
+umap_values <- umap(experiment$assays$protein_read_counts$data_layers$normalized, scale=TRUE, metric="euclidean", init="laplacian", pca=20) 
 
 umap_layer = tibble(    
       x = umap_values[,1],
       y = umap_values[,2]
 )
 
-experiment$assays$protein = add_analysis_layer(assay = experiment$assays$protein, layer_name = 'umap', umap_layer)
+experiment$assays$protein_read_counts = add_analysis_layer(assay = experiment$assays$protein_read_counts, layer_name = 'umap', umap_layer)
   
 # Hold all the different customer labels in a single structure.
-# cluster_by = experiment$assays$protein$analysis_layers$umap
-cluster_by = experiment$assays$protein$data_layers$normalized
+# cluster_by = experiment$assays$protein_read_counts$analysis_layers$umap
+cluster_by = experiment$assays$protein_read_counts$data_layers$normalized
 
 clusters = list()
 
@@ -445,7 +441,7 @@ for(i in 2:10) {
 }
 
 # Add cluster labels to the analysis data structure.
-experiment$assays$protein = add_analysis_layer(assay = experiment$assays$protein, layer_name = 'clusters', as_tibble(clusters))
+experiment$assays$protein_read_counts = add_analysis_layer(assay = experiment$assays$protein_read_counts, layer_name = 'clusters', as_tibble(clusters))
 
 
 ```
@@ -458,9 +454,9 @@ Plot all the different clusters on the same umap projection.
 
 
 p  = tapestri_scatterplot(
-                 x = experiment$assays$protein$analysis_layers$umap$x, 
-                 y= experiment$assays$protein$analysis_layers$umap$y, 
-                 color_by = experiment$assays$protein$analysis_layers$clusters)
+                 x = experiment$assays$protein_read_counts$analysis_layers$umap$x, 
+                 y= experiment$assays$protein_read_counts$analysis_layers$umap$y, 
+                 color_by = experiment$assays$protein_read_counts$analysis_layers$clusters)
 
 p = p + xlab('') + ylab('')
 p = p + umap_theme() 
@@ -479,14 +475,14 @@ To do:
 ```{r fig.width = 12, fig.height = 8}
 
 p_umap  = tapestri_scatterplot(
-                 x = experiment$assays$protein$analysis_layers$umap$x, 
-                 y= experiment$assays$protein$analysis_layers$umap$y, 
-                 color_by = experiment$assays$protein$analysis_layers$clusters$umap.kmean.cluster.4) + 
+                 x = experiment$assays$protein_read_counts$analysis_layers$umap$x, 
+                 y= experiment$assays$protein_read_counts$analysis_layers$umap$y, 
+                 color_by = experiment$assays$protein_read_counts$analysis_layers$clusters$umap.kmean.cluster.4) + 
   xlab('') + ylab('') + umap_theme() 
 
 p_violin = tapestri_violinplot(
-           clusters = experiment$assays$protein$analysis_layers$clusters$umap.kmean.cluster.4,
-           features = experiment$assays$protein$data_layers$normalized)
+           clusters = experiment$assays$protein_read_counts$analysis_layers$clusters$umap.kmean.cluster.4,
+           features = experiment$assays$protein_read_counts$data_layers$normalized)
 
 p_umap / p_violin
 
@@ -498,9 +494,9 @@ p_umap / p_violin
 ```{r fig.width = 12, fig.height = 8}
 
 p  = tapestri_scatterplot(
-                 x = experiment$assays$protein$analysis_layers$umap$x, 
-                 y= experiment$assays$protein$analysis_layers$umap$y, 
-                 color_by = experiment$assays$protein$data_layers$normalized)
+                 x = experiment$assays$protein_read_counts$analysis_layers$umap$x, 
+                 y= experiment$assays$protein_read_counts$analysis_layers$umap$y, 
+                 color_by = experiment$assays$protein_read_counts$data_layers$normalized)
 p = p + umap_theme() + scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
 p
 
@@ -520,8 +516,8 @@ We're only providing a simple example to get started.
 ```{r}
 
 # Order the features in chr order.
-protein.mat = experiment$assays$protein$data_layers$normalized
-clusters = experiment$assays$dna@analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
+protein.mat = experiment$assays$protein_read_counts$data_layers$normalized
+clusters = experiment$assays$dna_variants@analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
 
 
 
@@ -560,11 +556,11 @@ Usage:
 # Select a clustering method that best represents your data and identify the normal cluster.
 # Normalize all the read counts based on the normal cluster.
 cnv.mat = compute_ploidy(
-  reads = experiment$assays$cnv$data_layers$normalized,
-  clusters = experiment$assays$dna$analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4,
-  baseline_cluster = 3
+  reads = experiment$assays$dna_read_counts$data_layers$normalized,
+  clusters = experiment$assays$dna_variants$analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4,
+  baseline_cluster = 2
  )
-experiment$assays$cnv <- add_analysis_layer(assay = experiment$assays$cnv,layer_name = 'norm_to_baseline',data = cnv.mat)
+experiment$assays$dna_read_counts <- add_analysis_layer(assay = experiment$assays$dna_read_counts,layer_name = 'norm_to_baseline',data = cnv.mat)
 
 ```
 
@@ -574,10 +570,10 @@ From the heatmap we can clearly see the regions where there is loss of heterozyg
 
 ```{r}
 
-cnv.mat = as.matrix(experiment$assays$cnv$analysis_layers$norm_to_baseline)
+cnv.mat = as.matrix(experiment$assays$dna_read_counts$analysis_layers$norm_to_baseline)
 cnv.mat[is.na(cnv.mat) | is.infinite(cnv.mat)] <-2
 
-clusters = experiment$assays$dna@analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
+clusters = experiment$assays$dna_variants@analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
 
 cnv.h <- ComplexHeatmap::Heatmap(
    as.matrix(cnv.mat), 
@@ -599,8 +595,8 @@ cnv.h
 ```{r}
 
 p = tapestri_ploidy_plot(
-  normalized_reads = experiment$assays$cnv$analysis_layers$norm_to_baseline,
-  clusters = experiment$assays$dna$analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
+  normalized_reads = experiment$assays$dna_read_counts$analysis_layers$norm_to_baseline,
+  clusters = experiment$assays$dna_variants$analysis_layers$umap_vaf_clusters$umap.kmean.cluster.4
   )
 p
 ```

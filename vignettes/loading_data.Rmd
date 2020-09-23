@@ -66,22 +66,19 @@ filename <- system.file("extdata", "4_cell_line_mix_dna_protein.h5", package = "
 experiment = read_tap(filename)
 
 # Ideally, we would start by loading a filtered H5, but for now, we will load data with some basic filters.
-filtered_variants = filter_variants(experiment$assays$dna)
-vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
-vaf[is.na(vaf)] <- 0
-filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
+filtered_variants = filter_variants(experiment$assays$dna_variants)
 
 # Add the filtered data back to the experiment. This will be a subset of the rest of the assays to ensure that we have the same cells.
 experiment = add_assay(moo = experiment,assay = filtered_variants, keep_common_cells = TRUE)
 
 # Normalize using the clr method.
-protein_counts_norm = experiment$assays$protein$data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
+protein_counts_norm = experiment$assays$protein_read_counts$data_layers$read_counts %>% clr_by_feature() %>% as_tibble(rownames = NA)
 # Add normalized data to the protein assay.
-experiment$assays$protein = add_data_layer(experiment$assays$protein,'normalized',protein_counts_norm)
+experiment$assays$protein_read_counts = add_data_layer(experiment$assays$protein_read_counts,'normalized',protein_counts_norm)
 
 
-normalized_dna_reads = normalize_dna_reads(experiment$assays$cnv$data_layers$read_counts)
-experiment$assays$cnv = add_data_layer(experiment$assays$cnv,'normalized',normalized_dna_reads)
+normalized_dna_reads = normalize_dna_reads(experiment$assays$dna_read_counts$data_layers$read_counts)
+experiment$assays$dna_read_counts = add_data_layer(experiment$assays$dna_read_counts,'normalized',normalized_dna_reads)
 
 
 experiment
@@ -98,8 +95,8 @@ Build a multiomics object from individual components instead of using the `read_
 
 
 ```{r load_data}
-ASSAY_NAME_VARIANT = 'dna'
-ASSAY_NAME_PROTEIN = 'protein'
+ASSAY_NAME_VARIANT = 'dna_variants'
+ASSAY_NAME_PROTEIN = 'protein_read_counts'
 
 filename <- system.file("extdata", "4_cell_line_mix_dna_protein.h5", package = "TapestriR")
 
@@ -107,10 +104,6 @@ filename <- system.file("extdata", "4_cell_line_mix_dna_protein.h5", package = "
 variants = read_assay_h5(filename = filename, assay_name = ASSAY_NAME_VARIANT, min_mutation_rate = 0.005)
 
 filtered_variants = filter_variants(variants)
-
-vaf=round(filtered_variants@data_layers$AD/filtered_variants@data_layers$DP, 3)
-vaf[is.na(vaf)] <- 0
-filtered_variants = add_data_layer(filtered_variants,'VAF',vaf)
 
 # Load the protein assay and normalize.
 protein = read_assay_h5(filename = filename, assay_name = ASSAY_NAME_PROTEIN)
@@ -122,7 +115,6 @@ protein = add_data_layer(protein,'normalized',protein_counts_norm)
 # Create a multiomics object (moo).
 experiment = create_moo(experiment_name = basename(filename), cell_annotations = filtered_variants@cell_annotations)
 experiment = add_assay(moo = experiment,assay = filtered_variants)
-
 experiment = add_assay(experiment,protein, keep_common_cells = TRUE)
 
 experiment
@@ -152,27 +144,27 @@ protein_y = 2
 ##################
 
 # All proteins
-color_by = experiment$assays$protein$data_layers$normalized
+color_by = experiment$assays$protein_read_counts$data_layers$normalized
 
 # Select a few proteins.
-# color_by =  experiment$assays$protein$data_layers$normalized %>% select('CD110','CD117')
+# color_by =  experiment$assays$protein_read_counts$data_layers$normalized %>% select('CD110','CD117')
 
 # Select a few variants.
-# color_by =  experiment$assays$dna$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+# color_by =  experiment$assays$dna_variants$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
 
 
-p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[protein_x]], 
-                 y= experiment$assays$protein$data_layers$normalized[[protein_y]], 
+p  = tapestri_scatterplot(x = experiment$assays$protein_read_counts$data_layers$normalized[[protein_x]], 
+                 y= experiment$assays$protein_read_counts$data_layers$normalized[[protein_y]], 
                  color_by = color_by)+ scale_colour_gradient2(low="yellow", mid='grey', high="darkred") 
 p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Protein Expression')
 p
 
 # Select a few variants.
-color_by =  experiment$assays$dna$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
+color_by =  experiment$assays$dna_variants$data_layers$NGT %>% select(1:10) %>% mutate_all(as_factor) %>% mutate_all(recode_genotypes)
 
 
-p  = tapestri_scatterplot(x = experiment$assays$protein$data_layers$normalized[[protein_x]], 
-                 y= experiment$assays$protein$data_layers$normalized[[protein_y]], 
+p  = tapestri_scatterplot(x = experiment$assays$protein_read_counts$data_layers$normalized[[protein_x]], 
+                 y= experiment$assays$protein_read_counts$data_layers$normalized[[protein_y]], 
                  color_by = color_by)
 p = p + xlab(protein_x) + ylab(protein_y) + ggtitle('Color by Genotypes')
 p

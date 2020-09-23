@@ -11,7 +11,7 @@
 #'
 define_subclones <- function(assay, small_subclone = 0.01, ignore_zygosity=FALSE){
   
-  ngt = experiment$assays$dna$data_layers$NGT
+  ngt = experiment$assays$dna_variants$data_layers$NGT
 
     if(ignore_zygosity) {
     ngt[ngt ==2] = 1
@@ -27,7 +27,7 @@ define_subclones <- function(assay, small_subclone = 0.01, ignore_zygosity=FALSE
   df <- df %>% mutate(
     subclone_label = case_when (
       apply(df == 3, 1, any) ~ 'missing NGT subclone',
-      (cells/nrow(experiment$assays$dna)) < small_subclone ~ 'small subclone',
+      (cells/nrow(experiment$assays$dna_variants)) < small_subclone ~ 'small subclone',
       TRUE ~ subclone
     ))
   
