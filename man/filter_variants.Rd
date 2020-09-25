@@ -13,6 +13,7 @@ filter_variants(
   mc = 50,
   mm = 1,
   gt.mask = FALSE
+  filetype = "h5"
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ filter_variants(
 \item{mm}{Remove variants mutated in < mm of cells (default 1)}
 
 \item{gt.mask}{mask low quality GT as missing (if GQ/DP/AF lower than cutoff, default FALSE)}
+
+\item{filetype}{the dna_variant layer differs based on whether we are using h5 or loom file, default h5)}
 }
 \value{
 Filtered genotypes
